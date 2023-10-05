@@ -3,7 +3,7 @@ package config
 import (
 	"bytes"
 
-	"github.com/amineamaach/simulators/iotSensorsMQTT-SpB/internal/component"
+	"github.com/Megatol75/simulators/iotSensorsMQTT-SpB/internal/component"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )

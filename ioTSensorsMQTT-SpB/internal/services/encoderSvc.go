@@ -3,8 +3,8 @@ package services
 import (
 	"errors"
 
-	"github.com/amineamaach/simulators/iotSensorsMQTT-SpB/internal/model"
-	sparkplug "github.com/amineamaach/simulators/iotSensorsMQTT-SpB/third_party/sparkplug_b"
+	"github.com/Megatol75/simulators/iotSensorsMQTT-SpB/internal/model"
+	sparkplug "github.com/Megatol75/simulators/iotSensorsMQTT-SpB/third_party/sparkplug_b"
 	"github.com/sirupsen/logrus"
 	proto "google.golang.org/protobuf/proto"
 )

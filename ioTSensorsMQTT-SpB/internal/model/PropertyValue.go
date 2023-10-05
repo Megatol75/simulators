@@ -1,7 +1,7 @@
 package model
 
 import (
-	sparkplug "github.com/amineamaach/simulators/iotSensorsMQTT-SpB/third_party/sparkplug_b"
+	sparkplug "github.com/Megatol75/simulators/iotSensorsMQTT-SpB/third_party/sparkplug_b"
 	"github.com/sirupsen/logrus"
 )
 
@@ -15,7 +15,7 @@ func (propertyValue *PropertyValue) convertPropertyValue(log *logrus.Logger) *sp
 	protoPropertyValue := &sparkplug.Payload_PropertyValue{}
 	if err := propertyValue.getPropertyValue(protoPropertyValue); err != nil {
 		log.WithFields(logrus.Fields{
-			"msg":         err,
+			"msg": err,
 		}).Errorln("Failed to convert PropertyValue to sparkplug B model ⛔")
 		return nil
 	}

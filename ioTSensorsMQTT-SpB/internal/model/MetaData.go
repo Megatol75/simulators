@@ -1,6 +1,6 @@
 package model
 
-import sparkplug "github.com/amineamaach/simulators/iotSensorsMQTT-SpB/third_party/sparkplug_b"
+import sparkplug "github.com/Megatol75/simulators/iotSensorsMQTT-SpB/third_party/sparkplug_b"
 
 type MetaData struct {
 	// Indicates if the metric represents one of multiple parts.
@@ -27,7 +27,6 @@ type MetaData struct {
 	// A description associated with the metric.
 	Description string `json:"description,omitempty"`
 }
-
 
 func (meta *MetaData) ConvertMetaData(protoMetric *sparkplug.Payload_Metric) {
 	protoMetric.Metadata.IsMultiPart = &meta.IsMultipart

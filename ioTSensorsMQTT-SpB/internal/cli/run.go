@@ -8,10 +8,12 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/amineamaach/simulators/iotSensorsMQTT-SpB/internal/config"
-	"github.com/amineamaach/simulators/iotSensorsMQTT-SpB/internal/log"
-	"github.com/amineamaach/simulators/iotSensorsMQTT-SpB/internal/services"
-	"github.com/amineamaach/simulators/iotSensorsMQTT-SpB/internal/simulators"
+	"github.com/Megatol75/simulators/iotSensorsMQTT-SpB/internal/config"
+	"github.com/Megatol75/simulators/iotSensorsMQTT-SpB/internal/log"
+	"github.com/Megatol75/simulators/iotSensorsMQTT-SpB/internal/services"
+	"github.com/Megatol75/simulators/iotSensorsMQTT-SpB/internal/simulators"
+
+	//"github.com/eclipse/paho.golang/paho"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/sirupsen/logrus"
 )
@@ -70,6 +72,18 @@ func Run() {
 			}).Errorln("⛔ Failed to instantiate device ⛔")
 			continue
 		}
+
+		// // Subscribe to device control commands
+		// topic := eonNode.Namespace + "/" + eonNode.GroupId + "/DCMD/" + eonNode.NodeId + "/" + device.DeviceId
+		// if _, err := eonNode.SessionHandler.MqttClient.Subscribe(eodNodeContext, &paho.Subscribe{
+		// 	Subscriptions: map[string]paho.SubscribeOptions{
+		// 		topic: {QoS: cfg.MQTTConfig.QoS},
+		// 	},
+		// }); err != nil {
+		// 	logger.Infof("Failed to subscribe (%s). This is likely to mean no messages will be received. ⛔\n", err)
+		// 	return
+		// }
+		// logger.WithField("Topic", topic).Infoln("MQTT subscription made ✅")
 
 		// Attach the new device to the EoN Node
 		eonNode.AddDevice(eodNodeContext, newDevice, logger)

@@ -4,7 +4,7 @@ import (
 	"errors"
 	"time"
 
-	sparkplug "github.com/amineamaach/simulators/iotSensorsMQTT-SpB/third_party/sparkplug_b"
+	sparkplug "github.com/Megatol75/simulators/iotSensorsMQTT-SpB/third_party/sparkplug_b"
 	"github.com/sirupsen/logrus"
 )
 
@@ -38,7 +38,7 @@ func NewMetric(
 		Name:     name,
 		DataType: dataType,
 		Value:    value,
-		Alias: alias,
+		Alias:    alias,
 	}
 }
 
@@ -109,7 +109,7 @@ func (m *Metric) ConvertMetric(protoMetric *sparkplug.Payload_Metric, log *logru
 
 func (m *Metric) GetValue(protoMetric *sparkplug.Payload_Metric, log *logrus.Logger) error {
 	log.WithFields(logrus.Fields{
-		"Metric alias":     m.Alias,
+		"Metric alias":    m.Alias,
 		"Metric dataType": m.DataType,
 	}).Debugln("Parsing metric data type .. 🔔")
 	switch m.DataType {

@@ -1,4 +1,4 @@
-module github.com/amineamaach/simulators/iotSensorsMQTT-SpB
+module github.com/Megatol75/simulators/iotSensorsMQTT-SpB
 
 go 1.19
 

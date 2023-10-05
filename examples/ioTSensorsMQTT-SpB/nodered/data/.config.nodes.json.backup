@@ -1,15 +1,13 @@
 {
     "node-red": {
         "name": "node-red",
-        "version": "3.0.2",
+        "version": "3.1.0",
         "local": false,
         "user": false,
         "nodes": {
             "junction": {
                 "name": "junction",
-                "types": [
-                    "junction"
-                ],
+                "types": [],
                 "enabled": true,
                 "local": false,
                 "user": false,
@@ -94,6 +92,17 @@
                 "user": false,
                 "module": "node-red",
                 "file": "/usr/src/node-red/node_modules/@node-red/nodes/core/common/90-comment.js"
+            },
+            "global-config": {
+                "name": "global-config",
+                "types": [
+                    "global-config"
+                ],
+                "enabled": true,
+                "local": false,
+                "user": false,
+                "module": "node-red",
+                "file": "/usr/src/node-red/node_modules/@node-red/nodes/core/common/91-global-config.js"
             },
             "unknown": {
                 "name": "unknown",
@@ -413,47 +422,6 @@
                 "user": false,
                 "module": "node-red",
                 "file": "/usr/src/node-red/node_modules/@node-red/nodes/core/storage/23-watch.js"
-            }
-        }
-    },
-    "protobuf-fixed": {
-        "name": "protobuf-fixed",
-        "version": "1.0.3",
-        "local": true,
-        "user": true,
-        "nodes": {
-            "encode": {
-                "name": "encode",
-                "types": [
-                    "encode"
-                ],
-                "enabled": true,
-                "local": true,
-                "user": false,
-                "module": "protobuf-fixed",
-                "file": "/data/node_modules/protobuf-fixed/src/nodes/encode.js"
-            },
-            "decode": {
-                "name": "decode",
-                "types": [
-                    "decode"
-                ],
-                "enabled": true,
-                "local": true,
-                "user": false,
-                "module": "protobuf-fixed",
-                "file": "/data/node_modules/protobuf-fixed/src/nodes/decode.js"
-            },
-            "file": {
-                "name": "file",
-                "types": [
-                    "protobuf-file"
-                ],
-                "enabled": true,
-                "local": true,
-                "user": false,
-                "module": "protobuf-fixed",
-                "file": "/data/node_modules/protobuf-fixed/src/nodes/protofile.js"
             }
         }
     },

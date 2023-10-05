@@ -8,10 +8,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/amineamaach/simulators/iotSensorsMQTT-SpB/internal/component"
-	"github.com/amineamaach/simulators/iotSensorsMQTT-SpB/internal/model"
-	"github.com/amineamaach/simulators/iotSensorsMQTT-SpB/internal/simulators"
-	sparkplug "github.com/amineamaach/simulators/iotSensorsMQTT-SpB/third_party/sparkplug_b"
+	"github.com/Megatol75/simulators/iotSensorsMQTT-SpB/internal/component"
+	"github.com/Megatol75/simulators/iotSensorsMQTT-SpB/internal/model"
+	"github.com/Megatol75/simulators/iotSensorsMQTT-SpB/internal/simulators"
+	sparkplug "github.com/Megatol75/simulators/iotSensorsMQTT-SpB/third_party/sparkplug_b"
 	"github.com/eclipse/paho.golang/autopaho"
 	"github.com/eclipse/paho.golang/paho"
 	"github.com/jellydator/ttlcache/v3"
@@ -161,7 +161,8 @@ func (d *DeviceSvc) PublishBirth(ctx context.Context, log *logrus.Logger) {
 
 	// Prevent race condition on the seq number when building/publishing
 	d.connMut.RLock()
-	seq := d.GetNextDeviceSeqNum(log)
+	//seq := d.GetNextDeviceSeqNum(log)
+	seq := GetNextSeqNum(log)
 	d.connMut.RUnlock()
 
 	// Create the DBIRTH certificate payload

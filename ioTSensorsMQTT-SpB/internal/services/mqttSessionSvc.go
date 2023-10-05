@@ -6,7 +6,7 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/amineamaach/simulators/iotSensorsMQTT-SpB/internal/component"
+	"github.com/Megatol75/simulators/iotSensorsMQTT-SpB/internal/component"
 	"github.com/eclipse/paho.golang/autopaho"
 	"github.com/eclipse/paho.golang/packets"
 	"github.com/eclipse/paho.golang/paho"

@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/amineamaach/simulators/iotSensorsMQTT-SpB/internal/cli"
+	"github.com/Megatol75/simulators/iotSensorsMQTT-SpB/internal/cli"
 )
 
 func main() {

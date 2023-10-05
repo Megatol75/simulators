@@ -14,7 +14,7 @@
 
     "eon_node": {
         "namespace": "spBv1.0",
-        "group_id": "IoTSensors",
+        "group_id": "sim",
         "node_id": "SparkplugB",
         "devices": [
             {

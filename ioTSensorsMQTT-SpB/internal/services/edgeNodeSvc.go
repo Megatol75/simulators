@@ -373,7 +373,7 @@ func (e *EdgeNodeSvc) OnMessageArrived(ctx context.Context, msg *paho.Publish, l
 				)
 
 				// Add new device
-				e.AddDevice(ctx, d, log)
+				e.AddDevice(d, log)
 			}
 
 		default:
@@ -386,7 +386,7 @@ func (e *EdgeNodeSvc) OnMessageArrived(ctx context.Context, msg *paho.Publish, l
 }
 
 // AddDevice used to add/attach a given device to the EoN Node
-func (e *EdgeNodeSvc) AddDevice(ctx context.Context, device *DeviceSvc, log *logrus.Logger) *EdgeNodeSvc {
+func (e *EdgeNodeSvc) AddDevice(device *DeviceSvc, log *logrus.Logger) *EdgeNodeSvc {
 	if device != nil {
 		if device.DeviceId != "" {
 			if _, exists := e.Devices[device.DeviceId]; exists {
@@ -396,7 +396,6 @@ func (e *EdgeNodeSvc) AddDevice(ctx context.Context, device *DeviceSvc, log *log
 			e.Devices[device.DeviceId] = device
 
 			log.WithField("Device Id", device.DeviceId).Infoln("Device added successfully ✅")
-			//e.PublishBirth(ctx, log)
 			return e
 		}
 		log.Errorln("Device id not set ⛔")

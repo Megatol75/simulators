@@ -67,7 +67,7 @@ func Run() {
 		)
 
 		// Attach the new device to the EoN Node
-		eonNode.AddDevice(eodNodeContext, newDevice, logger)
+		eonNode.AddDevice(newDevice, logger)
 
 		// Subscribe to device control commands
 		topic := eonNode.Namespace + "/" + eonNode.GroupId + "/DCMD/" + eonNode.NodeId + "/" + device.DeviceId

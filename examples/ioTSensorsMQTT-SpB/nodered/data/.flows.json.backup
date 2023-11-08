@@ -23,8 +23,8 @@
             "8bafb5ca9319f25b",
             "171d0d3ab6cf4b60"
         ],
-        "x": 28,
-        "y": 633,
+        "x": 8,
+        "y": 613,
         "w": 1144,
         "h": 594
     },
@@ -45,8 +45,8 @@
             "6da3b79df35d0a20",
             "3e99cfcda113d95f"
         ],
-        "x": 28,
-        "y": 33,
+        "x": 588,
+        "y": 13,
         "w": 1144,
         "h": 574
     },
@@ -67,8 +67,8 @@
             "417ec37e5915bdc6",
             "9745e11ad525fcea"
         ],
-        "x": 28,
-        "y": 1253,
+        "x": 1188,
+        "y": 613,
         "w": 1144,
         "h": 594
     },
@@ -98,8 +98,8 @@
             "746110e5b3a3049b",
             "49972b90e6d5c71e"
         ],
-        "x": 54,
-        "y": 659,
+        "x": 34,
+        "y": 639,
         "w": 1072,
         "h": 182
     },
@@ -128,8 +128,8 @@
             "fd7a0ea1a81378a5",
             "ba2747c23a62e368"
         ],
-        "x": 54,
-        "y": 59,
+        "x": 614,
+        "y": 39,
         "w": 1092,
         "h": 182
     },
@@ -162,8 +162,8 @@
             "5e4cb0e20593603c",
             "7cc49efdf0cfd895"
         ],
-        "x": 54,
-        "y": 259,
+        "x": 614,
+        "y": 239,
         "w": 1092,
         "h": 322
     },
@@ -196,8 +196,8 @@
             "ec4597b415098143",
             "422f8f9f2d2c4009"
         ],
-        "x": 54,
-        "y": 879,
+        "x": 34,
+        "y": 859,
         "w": 1092,
         "h": 322
     },
@@ -227,8 +227,8 @@
             "c1e84663db1dec8e",
             "33cf8389453d7303"
         ],
-        "x": 54,
-        "y": 1279,
+        "x": 1214,
+        "y": 639,
         "w": 1072,
         "h": 182
     },
@@ -261,8 +261,8 @@
             "193b26078302fdc0",
             "beb151997b41667b"
         ],
-        "x": 54,
-        "y": 1499,
+        "x": 1214,
+        "y": 859,
         "w": 1092,
         "h": 322
     },
@@ -326,8 +326,8 @@
         "rap": false,
         "rh": 0,
         "inputs": 0,
-        "x": 190,
-        "y": 700,
+        "x": 170,
+        "y": 680,
         "wires": [
             [
                 "221bc4458002b147"
@@ -340,7 +340,7 @@
         "z": "7f0d673780f6df9b",
         "g": "8bafb5ca9319f25b",
         "name": "Decoded Payload",
-        "active": true,
+        "active": false,
         "tosidebar": true,
         "console": false,
         "tostatus": false,
@@ -348,8 +348,8 @@
         "targetType": "msg",
         "statusVal": "",
         "statusType": "auto",
-        "x": 710,
-        "y": 700,
+        "x": 690,
+        "y": 680,
         "wires": []
     },
     {
@@ -366,8 +366,8 @@
         "rap": false,
         "rh": 0,
         "inputs": 0,
-        "x": 200,
-        "y": 100,
+        "x": 760,
+        "y": 80,
         "wires": [
             [
                 "0ab0ee6e2579314c"
@@ -388,8 +388,8 @@
         "targetType": "msg",
         "statusVal": "",
         "statusType": "auto",
-        "x": 730,
-        "y": 100,
+        "x": 1290,
+        "y": 80,
         "wires": []
     },
     {
@@ -404,8 +404,8 @@
         "once": false,
         "onceDelay": 0.1,
         "topic": "",
-        "x": 200,
-        "y": 300,
+        "x": 760,
+        "y": 280,
         "wires": [
             [
                 "1127a23de2dbeebc"
@@ -426,8 +426,8 @@
         "targetType": "msg",
         "statusVal": "",
         "statusType": "auto",
-        "x": 990,
-        "y": 400,
+        "x": 1550,
+        "y": 380,
         "wires": []
     },
     {
@@ -442,8 +442,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 500,
-        "y": 420,
+        "x": 1060,
+        "y": 400,
         "wires": [
             [
                 "6e35a2590aea5a9a"
@@ -465,8 +465,8 @@
         "correl": "",
         "expiry": "",
         "broker": "e55b485152c29769",
-        "x": 1010,
-        "y": 440,
+        "x": 1570,
+        "y": 420,
         "wires": []
     },
     {
@@ -481,8 +481,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 500,
-        "y": 300,
+        "x": 1060,
+        "y": 280,
         "wires": [
             [
                 "6e35a2590aea5a9a"
@@ -501,8 +501,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 500,
-        "y": 360,
+        "x": 1060,
+        "y": 340,
         "wires": [
             [
                 "6e35a2590aea5a9a"
@@ -521,8 +521,8 @@
         "once": false,
         "onceDelay": 0.1,
         "topic": "",
-        "x": 210,
-        "y": 360,
+        "x": 770,
+        "y": 340,
         "wires": [
             [
                 "b9e3065d9cf5cb8f"
@@ -541,8 +541,8 @@
         "once": false,
         "onceDelay": 0.1,
         "topic": "",
-        "x": 200,
-        "y": 420,
+        "x": 760,
+        "y": 400,
         "wires": [
             [
                 "6b942c05965b144e"
@@ -561,8 +561,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 480,
-        "y": 480,
+        "x": 1040,
+        "y": 460,
         "wires": [
             [
                 "6e35a2590aea5a9a"
@@ -581,8 +581,8 @@
         "once": false,
         "onceDelay": 0.1,
         "topic": "",
-        "x": 230,
-        "y": 480,
+        "x": 790,
+        "y": 460,
         "wires": [
             [
                 "91a7ebe172acc756"
@@ -601,8 +601,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 490,
-        "y": 540,
+        "x": 1050,
+        "y": 520,
         "wires": [
             [
                 "6e35a2590aea5a9a"
@@ -621,8 +621,8 @@
         "once": false,
         "onceDelay": 0.1,
         "topic": "",
-        "x": 210,
-        "y": 540,
+        "x": 770,
+        "y": 520,
         "wires": [
             [
                 "5e4cb0e20593603c"
@@ -643,8 +643,8 @@
         "rap": false,
         "rh": 0,
         "inputs": 0,
-        "x": 200,
-        "y": 140,
+        "x": 760,
+        "y": 120,
         "wires": [
             [
                 "0ab0ee6e2579314c"
@@ -665,8 +665,8 @@
         "rap": false,
         "rh": 0,
         "inputs": 0,
-        "x": 200,
-        "y": 180,
+        "x": 760,
+        "y": 160,
         "wires": [
             [
                 "0ab0ee6e2579314c"
@@ -687,8 +687,8 @@
         "rap": false,
         "rh": 0,
         "inputs": 0,
-        "x": 190,
-        "y": 740,
+        "x": 170,
+        "y": 720,
         "wires": [
             [
                 "221bc4458002b147"
@@ -709,8 +709,8 @@
         "rap": false,
         "rh": 0,
         "inputs": 0,
-        "x": 190,
-        "y": 780,
+        "x": 170,
+        "y": 760,
         "wires": [
             [
                 "221bc4458002b147"
@@ -723,7 +723,7 @@
         "z": "7f0d673780f6df9b",
         "name": "IoTSensors-SparkplugB",
         "info": "This flow contains all the defined commands\nto control the EoN Node and all the devices\nassociated with it.",
-        "x": 1280,
+        "x": 1840,
         "y": 40,
         "wires": []
     },
@@ -735,8 +735,8 @@
         "name": "sparkplugB encoder",
         "protofile": "33ba13cd985b8439",
         "protoType": "Template",
-        "x": 760,
-        "y": 420,
+        "x": 1320,
+        "y": 400,
         "wires": [
             [
                 "2b01e46f5ebab31c",
@@ -752,8 +752,8 @@
         "name": "sparkplugB dencoder",
         "protofile": "33ba13cd985b8439",
         "protoType": "Payload",
-        "x": 480,
-        "y": 740,
+        "x": 460,
+        "y": 720,
         "wires": [
             [
                 "8f363dbc436bd70f",
@@ -769,8 +769,8 @@
         "name": "sparkplugB dencoder",
         "protofile": "33ba13cd985b8439",
         "protoType": "Payload",
-        "x": 500,
-        "y": 140,
+        "x": 1060,
+        "y": 120,
         "wires": [
             [
                 "4a6aaf3d4f44d6a4",
@@ -790,8 +790,8 @@
         "once": false,
         "onceDelay": 0.1,
         "topic": "",
-        "x": 200,
-        "y": 980,
+        "x": 180,
+        "y": 960,
         "wires": [
             [
                 "3d3890956cc55536"
@@ -812,8 +812,8 @@
         "targetType": "msg",
         "statusVal": "",
         "statusType": "auto",
-        "x": 1010,
-        "y": 1020,
+        "x": 990,
+        "y": 1000,
         "wires": []
     },
     {
@@ -828,8 +828,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 490,
-        "y": 1040,
+        "x": 470,
+        "y": 1020,
         "wires": [
             [
                 "422f8f9f2d2c4009"
@@ -851,8 +851,8 @@
         "correl": "",
         "expiry": "",
         "broker": "e55b485152c29769",
-        "x": 1010,
-        "y": 1060,
+        "x": 990,
+        "y": 1040,
         "wires": []
     },
     {
@@ -867,8 +867,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 500,
-        "y": 980,
+        "x": 480,
+        "y": 960,
         "wires": [
             [
                 "422f8f9f2d2c4009"
@@ -887,8 +887,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 510,
-        "y": 920,
+        "x": 490,
+        "y": 900,
         "wires": [
             [
                 "422f8f9f2d2c4009"
@@ -907,8 +907,8 @@
         "once": false,
         "onceDelay": 0.1,
         "topic": "",
-        "x": 190,
-        "y": 920,
+        "x": 170,
+        "y": 900,
         "wires": [
             [
                 "ebbdeb160a483119"
@@ -927,8 +927,8 @@
         "once": false,
         "onceDelay": 0.1,
         "topic": "",
-        "x": 210,
-        "y": 1040,
+        "x": 190,
+        "y": 1020,
         "wires": [
             [
                 "99aaa7d2f3fe6b24"
@@ -947,8 +947,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 480,
-        "y": 1100,
+        "x": 460,
+        "y": 1080,
         "wires": [
             [
                 "422f8f9f2d2c4009"
@@ -967,8 +967,8 @@
         "once": false,
         "onceDelay": 0.1,
         "topic": "",
-        "x": 230,
-        "y": 1100,
+        "x": 210,
+        "y": 1080,
         "wires": [
             [
                 "7c68c9335bc0eba8"
@@ -983,12 +983,13 @@
         "name": "Update Sensor",
         "func": "msg.payload = {\n        \"version\": \"v1.0.0\",\n        \"isDefinition\": true,\n        \"parameters\": [\n            {\n                \"name\": \"SensorId\",\n                \"stringValue\": \"NewSensor\"\n            },\n            {\n                \"name\": \"Mean\",\n                \"doubleValue\": 98.5\n            },\n            {\n                \"name\": \"Std\",\n                \"doubleValue\": 1.8\n            },\n            {\n                \"name\": \"DelayMin\",\n                \"intValue\": 3\n            },\n            {\n                \"name\": \"DelayMax\",\n                \"intValue\": 5\n            },\n            {\n                \"name\": \"Randomize\",\n                \"booleanValue\": false\n            },\n        ],\n         \"metrics\": [\n        {\n            \"name\": \"Device Control/UpdateSimulator\",\n            \"booleanValue\": true\n        }\n    ]\n}\n\nreturn msg;",
         "outputs": 1,
+        "timeout": "",
         "noerr": 0,
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 480,
-        "y": 1160,
+        "x": 460,
+        "y": 1140,
         "wires": [
             [
                 "422f8f9f2d2c4009"
@@ -1007,8 +1008,8 @@
         "once": false,
         "onceDelay": 0.1,
         "topic": "",
-        "x": 230,
-        "y": 1160,
+        "x": 210,
+        "y": 1140,
         "wires": [
             [
                 "bccf6e86df3779e4"
@@ -1039,8 +1040,8 @@
         "checkall": "true",
         "repair": false,
         "outputs": 2,
-        "x": 670,
-        "y": 780,
+        "x": 650,
+        "y": 760,
         "wires": [
             [
                 "49972b90e6d5c71e"
@@ -1058,8 +1059,8 @@
         "name": "sparkplugB encoder",
         "protofile": "33ba13cd985b8439",
         "protoType": "Template",
-        "x": 760,
-        "y": 1040,
+        "x": 740,
+        "y": 1020,
         "wires": [
             [
                 "551599bd68c97175",
@@ -1081,8 +1082,8 @@
         "retentionPolicyV18Flux": "",
         "org": "simulators-project",
         "bucket": "simulators",
-        "x": 1000,
-        "y": 780,
+        "x": 980,
+        "y": 760,
         "wires": []
     },
     {
@@ -1091,14 +1092,15 @@
         "z": "7f0d673780f6df9b",
         "g": "8bafb5ca9319f25b",
         "name": "Certs",
-        "func": "let dTags = {\n    namespace: \"spBv1.0\",\n    group_id: msg.payload.metrics[3].stringValue,\n    node_id: msg.payload.metrics[2].stringValue,\n    device_id: msg.payload.metrics[1].stringValue\n};\n\nlet dFields = {}\n\nfor (let index in msg.payload.metrics) {\n    dFields[msg.payload.metrics[index].name.replace(/\\s+/g, '') + \"_alias\"] = msg.payload.metrics[index].alias\n    if (msg.payload.metrics[index].hasOwnProperty('stringValue')) {\n        dFields[msg.payload.metrics[index].name.replace(/\\s+/g, '')] = String(msg.payload.metrics[index][\"stringValue\"])\n    } else if (msg.payload.metrics[index].hasOwnProperty('longValue')) {\n        dFields[msg.payload.metrics[index].name.replace(/\\s+/g, '')] = String(msg.payload.metrics[index][\"longValue\"])\n    } else if (msg.payload.metrics[index].hasOwnProperty('doubleValue')) {\n        dFields[msg.payload.metrics[index].name.replace(/\\s+/g, '')] = String(msg.payload.metrics[index][\"doubleValue\"])\n    } else if (msg.payload.metrics[index].hasOwnProperty('booleanValue')) {\n        dFields[msg.payload.metrics[index].name.replace(/\\s+/g, '')] = String(msg.payload.metrics[index][\"booleanValue\"])\n    }\n}\n\n\nmsg.payload = [\n    {\n        measurement: \"devices_certs\",\n        fields: dFields,\n        tags: dTags,\n        timestamp: String(msg.payload.timestamp)\n    }\n];\n\nreturn msg;",
+        "func": "let dTags = {\n    namespace: \"spBv1.0\",\n    group_id: msg.payload.metrics[2].stringValue,\n    node_id: msg.payload.metrics[1].stringValue,\n    device_id: msg.payload.metrics[0].stringValue\n};\n\nlet dFields = {}\n\nfor (let index in msg.payload.metrics) {\n    dFields[msg.payload.metrics[index].name.replace(/\\s+/g, '') + \"_alias\"] = msg.payload.metrics[index].alias\n    if (msg.payload.metrics[index].hasOwnProperty('stringValue')) {\n        dFields[msg.payload.metrics[index].name.replace(/\\s+/g, '')] = String(msg.payload.metrics[index][\"stringValue\"])\n    } else if (msg.payload.metrics[index].hasOwnProperty('longValue')) {\n        dFields[msg.payload.metrics[index].name.replace(/\\s+/g, '')] = String(msg.payload.metrics[index][\"longValue\"])\n    } else if (msg.payload.metrics[index].hasOwnProperty('doubleValue')) {\n        dFields[msg.payload.metrics[index].name.replace(/\\s+/g, '')] = String(msg.payload.metrics[index][\"doubleValue\"])\n    } else if (msg.payload.metrics[index].hasOwnProperty('booleanValue')) {\n        dFields[msg.payload.metrics[index].name.replace(/\\s+/g, '')] = String(msg.payload.metrics[index][\"booleanValue\"])\n    }\n}\n\n\nmsg.payload = [\n    {\n        measurement: \"devices_certs\",\n        fields: dFields,\n        tags: dTags,\n        timestamp: String(msg.payload.timestamp)\n    }\n];\n\nreturn msg;",
         "outputs": 1,
+        "timeout": "",
         "noerr": 0,
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 810,
-        "y": 800,
+        "x": 790,
+        "y": 780,
         "wires": [
             [
                 "b76c4f18d6f407e8"
@@ -1117,8 +1119,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 810,
-        "y": 760,
+        "x": 790,
+        "y": 740,
         "wires": [
             [
                 "b76c4f18d6f407e8"
@@ -1149,8 +1151,8 @@
         "checkall": "true",
         "repair": false,
         "outputs": 2,
-        "x": 690,
-        "y": 180,
+        "x": 1250,
+        "y": 160,
         "wires": [
             [
                 "39ae10cb66f44d42"
@@ -1172,8 +1174,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 830,
-        "y": 160,
+        "x": 1390,
+        "y": 140,
         "wires": [
             [
                 "f734af8d7efff40b"
@@ -1192,8 +1194,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 830,
-        "y": 200,
+        "x": 1390,
+        "y": 180,
         "wires": [
             [
                 "f734af8d7efff40b"
@@ -1214,8 +1216,8 @@
         "retentionPolicyV18Flux": "",
         "org": "simulators-project",
         "bucket": "simulators",
-        "x": 1020,
-        "y": 180,
+        "x": 1580,
+        "y": 160,
         "wires": []
     },
     {
@@ -1226,8 +1228,8 @@
         "name": "sparkplugB dencoder",
         "protofile": "33ba13cd985b8439",
         "protoType": "Payload",
-        "x": 480,
-        "y": 1360,
+        "x": 1640,
+        "y": 720,
         "wires": [
             [
                 "fdaae2dbc3801c07",
@@ -1249,8 +1251,8 @@
         "rap": false,
         "rh": 0,
         "inputs": 0,
-        "x": 190,
-        "y": 1320,
+        "x": 1350,
+        "y": 680,
         "wires": [
             [
                 "2a086d8c2cb1c6ed"
@@ -1271,8 +1273,8 @@
         "targetType": "msg",
         "statusVal": "",
         "statusType": "auto",
-        "x": 710,
-        "y": 1320,
+        "x": 1870,
+        "y": 680,
         "wires": []
     },
     {
@@ -1289,8 +1291,8 @@
         "rap": false,
         "rh": 0,
         "inputs": 0,
-        "x": 190,
-        "y": 1360,
+        "x": 1350,
+        "y": 720,
         "wires": [
             [
                 "2a086d8c2cb1c6ed"
@@ -1311,8 +1313,8 @@
         "rap": false,
         "rh": 0,
         "inputs": 0,
-        "x": 190,
-        "y": 1400,
+        "x": 1350,
+        "y": 760,
         "wires": [
             [
                 "2a086d8c2cb1c6ed"
@@ -1343,8 +1345,8 @@
         "checkall": "true",
         "repair": false,
         "outputs": 2,
-        "x": 670,
-        "y": 1400,
+        "x": 1830,
+        "y": 760,
         "wires": [
             [
                 "33cf8389453d7303"
@@ -1368,8 +1370,8 @@
         "retentionPolicyV18Flux": "",
         "org": "simulators-project",
         "bucket": "simulators",
-        "x": 1000,
-        "y": 1400,
+        "x": 2160,
+        "y": 760,
         "wires": []
     },
     {
@@ -1384,8 +1386,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 810,
-        "y": 1420,
+        "x": 1970,
+        "y": 780,
         "wires": [
             [
                 "fb97c83db3c60cd1"
@@ -1404,8 +1406,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 810,
-        "y": 1380,
+        "x": 1970,
+        "y": 740,
         "wires": [
             [
                 "fb97c83db3c60cd1"
@@ -1424,8 +1426,8 @@
         "once": false,
         "onceDelay": 0.1,
         "topic": "",
-        "x": 200,
-        "y": 1600,
+        "x": 1360,
+        "y": 960,
         "wires": [
             [
                 "994e1c7fe2a8488f"
@@ -1446,8 +1448,8 @@
         "targetType": "msg",
         "statusVal": "",
         "statusType": "auto",
-        "x": 1010,
-        "y": 1640,
+        "x": 2170,
+        "y": 1000,
         "wires": []
     },
     {
@@ -1462,8 +1464,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 490,
-        "y": 1660,
+        "x": 1650,
+        "y": 1020,
         "wires": [
             [
                 "beb151997b41667b"
@@ -1485,8 +1487,8 @@
         "correl": "",
         "expiry": "",
         "broker": "e55b485152c29769",
-        "x": 1010,
-        "y": 1680,
+        "x": 2170,
+        "y": 1040,
         "wires": []
     },
     {
@@ -1501,8 +1503,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 500,
-        "y": 1600,
+        "x": 1660,
+        "y": 960,
         "wires": [
             [
                 "beb151997b41667b"
@@ -1521,8 +1523,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 510,
-        "y": 1540,
+        "x": 1670,
+        "y": 900,
         "wires": [
             [
                 "beb151997b41667b"
@@ -1541,8 +1543,8 @@
         "once": false,
         "onceDelay": 0.1,
         "topic": "",
-        "x": 190,
-        "y": 1540,
+        "x": 1350,
+        "y": 900,
         "wires": [
             [
                 "3fa0850b68f2328e"
@@ -1561,8 +1563,8 @@
         "once": false,
         "onceDelay": 0.1,
         "topic": "",
-        "x": 210,
-        "y": 1660,
+        "x": 1370,
+        "y": 1020,
         "wires": [
             [
                 "2bbc63114cbc9a91"
@@ -1581,8 +1583,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 480,
-        "y": 1720,
+        "x": 1640,
+        "y": 1080,
         "wires": [
             [
                 "beb151997b41667b"
@@ -1601,8 +1603,8 @@
         "once": false,
         "onceDelay": 0.1,
         "topic": "",
-        "x": 230,
-        "y": 1720,
+        "x": 1390,
+        "y": 1080,
         "wires": [
             [
                 "b3bc1b4787f6bd8d"
@@ -1621,8 +1623,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 480,
-        "y": 1780,
+        "x": 1640,
+        "y": 1140,
         "wires": [
             [
                 "beb151997b41667b"
@@ -1641,8 +1643,8 @@
         "once": false,
         "onceDelay": 0.1,
         "topic": "",
-        "x": 230,
-        "y": 1780,
+        "x": 1390,
+        "y": 1140,
         "wires": [
             [
                 "f08fb4622c506982"
@@ -1657,8 +1659,8 @@
         "name": "sparkplugB encoder",
         "protofile": "33ba13cd985b8439",
         "protoType": "Template",
-        "x": 760,
-        "y": 1660,
+        "x": 1920,
+        "y": 1020,
         "wires": [
             [
                 "1559d5b083f231a5",

@@ -49,7 +49,7 @@ services:
 ################## EoN Nodes Sparkplug B #################
 ##########################################################
   eonNode:
-    image: amineamaach/sensors-sparkplugb:v1.0.0
+    image: megatol75/sparkplugemu:dev
     restart: "no"
     container_name: eonNode
     hostname: IOTSensorsMQTT-spB

@@ -13,9 +13,8 @@ import (
 	"github.com/Megatol75/simulators/iotSensorsMQTT-SpB/internal/services"
 	"github.com/Megatol75/simulators/iotSensorsMQTT-SpB/internal/simulators"
 
-	//"github.com/eclipse/paho.golang/paho"
+	"github.com/eclipse/paho.golang/paho"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"github.com/sirupsen/logrus"
 )
 
 func Run() {
@@ -50,46 +49,37 @@ func Run() {
 	// Wait for the EoN Node to establish an MQTT connection
 	eonNode.SessionHandler.MqttClient.AwaitConnection(eodNodeContext)
 
+	eonNode.PublishBirth(eodNodeContext, logger)
+
 	for _, device := range cfg.EoNNodeConfig.Devices {
 		deviceContext := context.Background()
 		// Instantiate a new device
-		newDevice, err := services.NewDeviceInstance(
+		newDevice := services.NewDeviceInstance(
 			deviceContext,
 			eonNode.Namespace,
 			eonNode.GroupId,
 			eonNode.NodeId,
 			device.DeviceId,
 			logger,
-			&cfg.MQTTConfig,
+			eonNode.SessionHandler,
 			device.TTL,
 			device.StoreAndForward,
 		)
 
-		if err != nil {
-			logger.WithFields(logrus.Fields{
-				"Device Id": device.DeviceId,
-				"Err":       err,
-			}).Errorln("⛔ Failed to instantiate device ⛔")
-			continue
-		}
-
-		// // Subscribe to device control commands
-		// topic := eonNode.Namespace + "/" + eonNode.GroupId + "/DCMD/" + eonNode.NodeId + "/" + device.DeviceId
-		// if _, err := eonNode.SessionHandler.MqttClient.Subscribe(eodNodeContext, &paho.Subscribe{
-		// 	Subscriptions: map[string]paho.SubscribeOptions{
-		// 		topic: {QoS: cfg.MQTTConfig.QoS},
-		// 	},
-		// }); err != nil {
-		// 	logger.Infof("Failed to subscribe (%s). This is likely to mean no messages will be received. ⛔\n", err)
-		// 	return
-		// }
-		// logger.WithField("Topic", topic).Infoln("MQTT subscription made ✅")
-
 		// Attach the new device to the EoN Node
 		eonNode.AddDevice(eodNodeContext, newDevice, logger)
 
-		// Wait for the device to establish an MQTT connection
-		eonNode.SessionHandler.MqttClient.AwaitConnection(deviceContext)
+		// Subscribe to device control commands
+		topic := eonNode.Namespace + "/" + eonNode.GroupId + "/DCMD/" + eonNode.NodeId + "/" + device.DeviceId
+		if _, err := eonNode.SessionHandler.MqttClient.Subscribe(eodNodeContext, &paho.Subscribe{
+			Subscriptions: map[string]paho.SubscribeOptions{
+				topic: {QoS: cfg.MQTTConfig.QoS},
+			},
+		}); err != nil {
+			logger.Infof("Failed to subscribe (%s). This is likely to mean no messages will be received. ⛔\n", err)
+			return
+		}
+		logger.WithField("Topic", topic).Infoln("MQTT subscription made ✅")
 
 		// Add the defined simulated IoTSensors to the new device
 		for _, sim := range device.Simulators {

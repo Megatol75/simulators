@@ -4,11 +4,9 @@ import (
 	"context"
 	"fmt"
 	"math/rand"
-	"strings"
 	"sync"
 	"time"
 
-	"github.com/Megatol75/simulators/iotSensorsMQTT-SpB/internal/component"
 	"github.com/Megatol75/simulators/iotSensorsMQTT-SpB/internal/model"
 	"github.com/Megatol75/simulators/iotSensorsMQTT-SpB/internal/simulators"
 	sparkplug "github.com/Megatol75/simulators/iotSensorsMQTT-SpB/third_party/sparkplug_b"
@@ -25,9 +23,6 @@ type DeviceSvc struct {
 	GroupId   string
 	NodeId    string
 	DeviceId  string
-	// Each device will have each own Seq and BdSeq
-	DeviceSeq   uint64
-	DeviceBdSeq uint64
 	// Simulated sensors attached to this device
 	Simulators     map[string]*simulators.IoTSensorSim
 	SessionHandler *MqttSessionSvc
@@ -55,23 +50,22 @@ func NewDeviceInstance(
 	ctx context.Context,
 	namespace, groupId, nodeId, deviceId string,
 	log *logrus.Logger,
-	mqttConfigs *component.MQTTConfig,
+	sessionHandler *MqttSessionSvc,
 	ttl uint32,
 	enabled bool,
-) (*DeviceSvc, error) {
+) *DeviceSvc {
 	log.Debugln("Setting up a new device instance 🔔")
 
 	d := &DeviceSvc{
-		Namespace:   namespace,
-		GroupId:     groupId,
-		NodeId:      nodeId,
-		DeviceId:    deviceId,
-		DeviceSeq:   0,
-		DeviceBdSeq: 0,
-		retain:      false,
-		Simulators:  make(map[string]*simulators.IoTSensorSim),
-		TTL:         ttl,
-		Enabled:     enabled,
+		SessionHandler: sessionHandler,
+		Namespace:      namespace,
+		GroupId:        groupId,
+		NodeId:         nodeId,
+		DeviceId:       deviceId,
+		retain:         false,
+		Simulators:     make(map[string]*simulators.IoTSensorSim),
+		TTL:            ttl,
+		Enabled:        enabled,
 	}
 
 	// If store and forward enabled
@@ -81,78 +75,10 @@ func NewDeviceInstance(
 		)
 	}
 
-	mqttSession := &MqttSessionSvc{
-		Log:         log,
-		MqttConfigs: *mqttConfigs,
-	}
-
-	willTopic := d.Namespace + "/" + d.GroupId + "/DDEATH/" + d.NodeId + "/" + d.DeviceId
-
-	// Building up the Death Certificate MQTT Payload.
-	payload := model.NewSparkplubBPayload(time.Now(), d.GetNextDeviceSeqNum(log)).
-		AddMetric(*model.NewMetric("bdSeq", sparkplug.DataType_UInt64, 0, d.GetNextDeviceSeqNum(log)))
-
-	// Encoding the Death Certificate MQTT Payload.
-	bytes, err := NewSparkplugBEncoder(log).GetBytes(payload)
-	if err != nil {
-		log.Errorln("Error encoding the sparkplug payload ⛔")
-		return nil, err
-	}
-
-	err = mqttSession.EstablishMqttSession(ctx, willTopic, bytes,
-		func(cm *autopaho.ConnectionManager, c *paho.Connack) {
-			// On connection up
-			log.WithFields(logrus.Fields{
-				"Groupe Id": d.GroupId,
-				"Node Id":   d.NodeId,
-				"Device Id": d.DeviceId,
-			}).Infoln("MQTT connection up ✅")
-
-			if d.Enabled && d.CacheStore.Len() > 0 {
-				for key, value := range d.CacheStore.Items() {
-					sensorId := strings.Split(key, ":")[0]
-					log.WithFields(logrus.Fields{
-						"Groupe Id": d.GroupId,
-						"Node Id":   d.NodeId,
-						"Device Id": d.DeviceId,
-						"Key":       key,
-					}).Infoln("Republishing unacknowledged messages.. 🔔")
-					// Keep retrying publishing the data to the broker until we get
-					// PUBACK or the TTL to fire.
-					go d.publishSensorData(ctx, sensorId, value.Value(), log)
-					d.connMut.Lock()
-					d.CacheStore.Delete(key)
-					d.connMut.Unlock()
-				}
-				CachedMsgs.Set(float64(d.CacheStore.Len()))
-			}
-
-			// Subscribe to device control commands
-			topic := d.Namespace + "/" + d.GroupId + "/DCMD/" + d.NodeId + "/" + d.DeviceId
-			if _, err := cm.Subscribe(ctx, &paho.Subscribe{
-				Subscriptions: map[string]paho.SubscribeOptions{
-					topic: {QoS: mqttConfigs.QoS},
-				},
-			}); err != nil {
-				log.Infof("Failed to subscribe (%s). This is likely to mean no messages will be received. ⛔\n", err)
-				return
-			}
-			log.WithField("Topic", topic).Infoln("MQTT subscription made ✅")
-
-		}, paho.NewSingleHandlerRouter(func(p *paho.Publish) {
-			d.OnMessageArrived(ctx, p, log)
-		}),
-	)
-
-	if err != nil {
-		log.Errorln("Error establishing MQTT session ⛔")
-		return nil, err
-	}
-
 	d.StartTime = time.Now()
 	d.Alias = uint64(100 + rand.Int63n(10000))
-	d.SessionHandler = mqttSession
-	return d, err
+	//d.SessionHandler = mqttSession
+	return d
 }
 
 // PublishBirth used to publish the device DBIRTH certificate to the broker.
@@ -163,6 +89,7 @@ func (d *DeviceSvc) PublishBirth(ctx context.Context, log *logrus.Logger) {
 	d.connMut.RLock()
 	//seq := d.GetNextDeviceSeqNum(log)
 	seq := GetNextSeqNum(log)
+	alias10 := GetNextAliasRange(10)
 	d.connMut.RUnlock()
 
 	// Create the DBIRTH certificate payload
@@ -173,19 +100,18 @@ func (d *DeviceSvc) PublishBirth(ctx context.Context, log *logrus.Logger) {
 	// For this simulation, we'll change things up a bit and decouple the MQTT
 	// connections for each device (as with the primary application in the specs).
 	payload := model.NewSparkplubBPayload(time.Now(), seq).
-		AddMetric(*model.NewMetric("bdSeq", sparkplug.DataType_UInt64, 1, d.DeviceBdSeq)).
-		AddMetric(*model.NewMetric("Device Id", sparkplug.DataType_String, 10, d.DeviceId)).
-		AddMetric(*model.NewMetric("Node Id", sparkplug.DataType_String, 11, d.NodeId)).
-		AddMetric(*model.NewMetric("Group Id", sparkplug.DataType_String, 11, d.GroupId)).
+		AddMetric(*model.NewMetric("Device Id", sparkplug.DataType_String, alias10, d.DeviceId)).
+		AddMetric(*model.NewMetric("Node Id", sparkplug.DataType_String, alias10+1, d.NodeId)).
+		AddMetric(*model.NewMetric("Group Id", sparkplug.DataType_String, alias10+2, d.GroupId)).
 		// Add control commands to control the devices in runtime.
-		AddMetric(*model.NewMetric("Device Control/Rebirth", sparkplug.DataType_Boolean, 2, false)).
-		AddMetric(*model.NewMetric("Device Control/OFF", sparkplug.DataType_Boolean, 3, false)).
-		AddMetric(*model.NewMetric("Device Control/AddSimulator", sparkplug.DataType_Boolean, 4, false)).
-		AddMetric(*model.NewMetric("Device Control/RemoveSimulator", sparkplug.DataType_Boolean, 5, false)).
-		AddMetric(*model.NewMetric("Device Control/UpdateSimulator", sparkplug.DataType_Boolean, 6, false)).
+		AddMetric(*model.NewMetric("Device Control/Rebirth", sparkplug.DataType_Boolean, alias10+3, false)).
+		AddMetric(*model.NewMetric("Device Control/OFF", sparkplug.DataType_Boolean, alias10+4, false)).
+		AddMetric(*model.NewMetric("Device Control/AddSimulator", sparkplug.DataType_Boolean, alias10+5, false)).
+		AddMetric(*model.NewMetric("Device Control/RemoveSimulator", sparkplug.DataType_Boolean, alias10+6, false)).
+		AddMetric(*model.NewMetric("Device Control/UpdateSimulator", sparkplug.DataType_Boolean, alias10+7, false)).
 		// Add some properties
-		AddMetric(*model.NewMetric("Properties/Number of simulators", sparkplug.DataType_Int64, 8, int64(len(d.Simulators)))).
-		AddMetric(*model.NewMetric("Properties/Up time ms", sparkplug.DataType_Int64, 9, upTime))
+		AddMetric(*model.NewMetric("Properties/Number of simulators", sparkplug.DataType_Int64, alias10+8, int64(len(d.Simulators)))).
+		AddMetric(*model.NewMetric("Properties/Up time ms", sparkplug.DataType_Int64, alias10+9, upTime))
 
 	for _, sim := range d.Simulators {
 		var i uint64 = 1
@@ -216,13 +142,6 @@ func (d *DeviceSvc) PublishBirth(ctx context.Context, log *logrus.Logger) {
 	})
 
 	if err != nil {
-		d.connMut.RLock()
-		if d.DeviceSeq == 0 {
-			d.DeviceSeq = 256
-		} else {
-			d.DeviceSeq--
-		}
-		d.connMut.RUnlock()
 		log.WithFields(logrus.Fields{
 			"Groupe ID": d.GroupId,
 			"Node ID":   d.NodeId,
@@ -622,7 +541,7 @@ func (d *DeviceSvc) RunPublisher(ctx context.Context, log *logrus.Logger) *Devic
 func (d *DeviceSvc) publishSensorData(ctx context.Context, sensorId string, data simulators.SensorData, log *logrus.Logger) {
 	// Preventing race condition between goroutines on seq number.
 	d.connMut.Lock()
-	data.Seq = d.GetNextDeviceSeqNum(log)
+	data.Seq = GetNextSeqNum(log)
 	d.connMut.Unlock()
 
 	if d.Simulators[sensorId] == nil {
@@ -647,7 +566,6 @@ func (d *DeviceSvc) publishSensorData(ctx context.Context, sensorId string, data
 		payload := model.NewSparkplubBPayload(time.Now(), data.Seq).
 			// Metric name - should only be included on birth
 			AddMetric(*model.NewMetric("", 10, alias, data.Value).SetTimestamp(data.Timestamp))
-			//  sparkplug.DataType_Double == 10
 
 		// Encoding the sparkplug Payload.
 		msg, err := NewSparkplugBEncoder(log).GetBytes(payload)
@@ -689,12 +607,6 @@ func (d *DeviceSvc) publishSensorData(ctx context.Context, sensorId string, data
 					"Store & Forward": "Enabled",
 					"Err":             err,
 				}).Errorln("Connection with the MQTT broker is currently down, retrying when connection is up.. ⛔")
-				// Don't increment the seq number in failure attempt
-				if d.DeviceSeq == 0 {
-					d.DeviceSeq = 256
-				} else {
-					d.DeviceSeq--
-				}
 			} else {
 				log.WithFields(logrus.Fields{
 					"Groupe Id":       d.GroupId,
@@ -722,34 +634,6 @@ func (d *DeviceSvc) publishSensorData(ctx context.Context, sensorId string, data
 	}(ctx, cm)
 }
 
-// GetNextDeviceSeqNum used to return and increment the EoN Node sequence number
-func (d *DeviceSvc) GetNextDeviceSeqNum(log *logrus.Logger) uint64 {
-	retSeq := d.DeviceSeq
-	if d.DeviceSeq == 256 {
-		d.DeviceSeq = 0
-	} else {
-		d.DeviceSeq++
-	}
-	log.WithFields(
-		logrus.Fields{
-			"Device Id":  d.DeviceId,
-			"Device Seq": retSeq,
-		},
-	).Debugf("Next Device Seq : %d 🔔\n", d.DeviceSeq)
-	return retSeq
-}
-
-// IncrementDeviceBdSeqNum used to increment the EoN Node Bd sequence number
-func (d *DeviceSvc) IncrementDeviceBdSeqNum(log *logrus.Logger) {
-	if d.DeviceBdSeq == 256 {
-		d.DeviceBdSeq = 0
-	} else {
-		d.DeviceBdSeq++
-	}
-	log.WithFields(
-		logrus.Fields{
-			"Device Id":    d.DeviceId,
-			"Device BdSeq": d.DeviceSeq,
-		},
-	).Debugln("Device BdSeq incremented 🔔")
+func (d *DeviceSvc) DeviceMethod(log *logrus.Logger) {
+	log.Infoln("Device method")
 }

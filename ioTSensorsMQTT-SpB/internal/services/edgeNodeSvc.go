@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"github.com/Megatol75/simulators/iotSensorsMQTT-SpB/internal/component"
@@ -19,6 +20,7 @@ var (
 	// EoD Node Seq and BdSeq
 	Seq        uint64 = 0
 	BdSeq      uint64 = 0
+	Alias      uint64 = 1
 	StartTime  time.Time
 	AppVersion string = "v1.0.0"
 	Maintainer string = "Amine Amaach"
@@ -151,27 +153,30 @@ func (e *EdgeNodeSvc) PublishBirth(ctx context.Context, log *logrus.Logger) *Edg
 	// of an MQTT Session is an EoN BIRTH Certificate.
 	props, _ := goInfo.GetInfo()
 	upTime := int64(time.Since(StartTime) / 1e+6)
+	Seq = 0
+	Alias = 1
+	alias20 := GetNextAliasRange(20)
 	// Create the EoN Node BIRTH payload
-	payload := model.NewSparkplubBPayload(time.Now(), 0).
-		AddMetric(*model.NewMetric("bdSeq", sparkplug.DataType_UInt64, 1, BdSeq)).
-		AddMetric(*model.NewMetric("Node Id", sparkplug.DataType_String, 18, e.NodeId)).
-		AddMetric(*model.NewMetric("Group Id", sparkplug.DataType_String, 19, e.GroupId)).
-		AddMetric(*model.NewMetric("Maintainer", sparkplug.DataType_String, 2, Maintainer)).
-		AddMetric(*model.NewMetric("Website", sparkplug.DataType_String, 3, Website)).
-		AddMetric(*model.NewMetric("App version", sparkplug.DataType_String, 4, AppVersion)).
-		AddMetric(*model.NewMetric("Source code", sparkplug.DataType_String, 5, SourceCode)).
-		AddMetric(*model.NewMetric("Up Time ms", sparkplug.DataType_Int64, 6, upTime)).
-		AddMetric(*model.NewMetric("Node Control/Rebirth", sparkplug.DataType_Boolean, 7, false)).
-		AddMetric(*model.NewMetric("Node Control/Reboot", sparkplug.DataType_Boolean, 8, false)).
-		AddMetric(*model.NewMetric("Node Control/Shutdown", sparkplug.DataType_Boolean, 9, false)).
-		AddMetric(*model.NewMetric("Node Control/RemoveDevice", sparkplug.DataType_Boolean, 16, false)).
-		AddMetric(*model.NewMetric("Node Control/AddDevice", sparkplug.DataType_Boolean, 17, false)).
-		AddMetric(*model.NewMetric("Properties/OS", sparkplug.DataType_String, 10, props.OS)).
-		AddMetric(*model.NewMetric("Properties/Kernel", sparkplug.DataType_String, 11, props.Kernel)).
-		AddMetric(*model.NewMetric("Properties/Core", sparkplug.DataType_String, 12, props.Core)).
-		AddMetric(*model.NewMetric("Properties/CPUs", sparkplug.DataType_Int32, 13, int32(props.CPUs))).
-		AddMetric(*model.NewMetric("Properties/Platform", sparkplug.DataType_String, 14, props.Platform)).
-		AddMetric(*model.NewMetric("Properties/Hostname", sparkplug.DataType_String, 15, props.Hostname))
+	payload := model.NewSparkplubBPayload(time.Now(), GetNextSeqNum(log)).
+		AddMetric(*model.NewMetric("bdSeq", sparkplug.DataType_UInt64, alias20, BdSeq)).
+		AddMetric(*model.NewMetric("Node Id", sparkplug.DataType_String, alias20+1, e.NodeId)).
+		AddMetric(*model.NewMetric("Group Id", sparkplug.DataType_String, alias20+2, e.GroupId)).
+		AddMetric(*model.NewMetric("Maintainer", sparkplug.DataType_String, alias20+3, Maintainer)).
+		AddMetric(*model.NewMetric("Website", sparkplug.DataType_String, alias20+4, Website)).
+		AddMetric(*model.NewMetric("App version", sparkplug.DataType_String, alias20+5, AppVersion)).
+		AddMetric(*model.NewMetric("Source code", sparkplug.DataType_String, alias20+6, SourceCode)).
+		AddMetric(*model.NewMetric("Up Time ms", sparkplug.DataType_Int64, alias20+7, upTime)).
+		AddMetric(*model.NewMetric("Node Control/Rebirth", sparkplug.DataType_Boolean, alias20+8, false)).
+		AddMetric(*model.NewMetric("Node Control/Reboot", sparkplug.DataType_Boolean, alias20+9, false)).
+		AddMetric(*model.NewMetric("Node Control/Shutdown", sparkplug.DataType_Boolean, alias20+10, false)).
+		AddMetric(*model.NewMetric("Node Control/RemoveDevice", sparkplug.DataType_Boolean, alias20+11, false)).
+		AddMetric(*model.NewMetric("Node Control/AddDevice", sparkplug.DataType_Boolean, alias20+12, false)).
+		AddMetric(*model.NewMetric("Properties/OS", sparkplug.DataType_String, alias20+13, props.OS)).
+		AddMetric(*model.NewMetric("Properties/Kernel", sparkplug.DataType_String, alias20+14, props.Kernel)).
+		AddMetric(*model.NewMetric("Properties/Core", sparkplug.DataType_String, alias20+15, props.Core)).
+		AddMetric(*model.NewMetric("Properties/CPUs", sparkplug.DataType_Int32, alias20+16, int32(props.CPUs))).
+		AddMetric(*model.NewMetric("Properties/Platform", sparkplug.DataType_String, alias20+17, props.Platform)).
+		AddMetric(*model.NewMetric("Properties/Hostname", sparkplug.DataType_String, alias20+18, props.Hostname))
 
 	for name, d := range e.Devices {
 		var i uint64 = 1
@@ -197,11 +202,6 @@ func (e *EdgeNodeSvc) PublishBirth(ctx context.Context, log *logrus.Logger) *Edg
 	})
 
 	if err != nil {
-		if Seq == 0 {
-			Seq = 256
-		} else {
-			Seq--
-		}
 		log.WithFields(logrus.Fields{
 			"Groupe ID": e.GroupId,
 			"Node ID":   e.NodeId,
@@ -223,13 +223,27 @@ func (e *EdgeNodeSvc) PublishBirth(ctx context.Context, log *logrus.Logger) *Edg
 // OnMessageArrived used to handle the EoN Node incoming control commands
 func (e *EdgeNodeSvc) OnMessageArrived(ctx context.Context, msg *paho.Publish, log *logrus.Logger) {
 	log.WithField("Topic", msg.Topic).Debugln("New NCMD arrived 🔔")
+	isDcmd, deviceId := IsDeviceMessage(msg.Topic)
+
+	if isDcmd {
+		log.WithField("DeviceId", deviceId).Infoln("DCMD message")
+		deviceToShutdown, exists := e.Devices[deviceId]
+
+		if !exists {
+			log.WithField("Device Id", deviceId).Warnln("Device not found 🔔")
+			return
+		}
+		deviceToShutdown.OnMessageArrived(ctx, msg, log)
+		return
+	}
+
 	var payloadTemplate sparkplug.Payload_Template
 	err := proto.Unmarshal(msg.Payload, &payloadTemplate)
 	if err != nil {
 		log.WithFields(logrus.Fields{
 			"Topic": msg.Topic,
 			"Err":   err,
-		}).Errorln("Failed to unmarshal DCMD payload ⛔")
+		}).Errorln("Failed to unmarshal NCMD payload ⛔")
 		return
 	}
 
@@ -346,24 +360,17 @@ func (e *EdgeNodeSvc) OnMessageArrived(ctx context.Context, msg *paho.Publish, l
 
 				}
 
-				d, err := NewDeviceInstance(
+				d := NewDeviceInstance(
 					ctx,
 					e.Namespace,
 					e.GroupId,
 					e.NodeId,
 					addDevice.DeviceIdValue,
 					log,
-					&e.SessionHandler.MqttConfigs,
+					e.SessionHandler,
 					addDevice.TtlValue,
 					addDevice.EnabledValue,
 				)
-				if err != nil {
-					log.WithFields(logrus.Fields{
-						"Topic": msg.Topic,
-						"Name":  *metric.Name,
-					}).Errorln("Failed to instantiate new device ⛔")
-					return
-				}
 
 				// Add new device
 				e.AddDevice(ctx, d, log)
@@ -389,7 +396,7 @@ func (e *EdgeNodeSvc) AddDevice(ctx context.Context, device *DeviceSvc, log *log
 			e.Devices[device.DeviceId] = device
 
 			log.WithField("Device Id", device.DeviceId).Infoln("Device added successfully ✅")
-			e.PublishBirth(ctx, log)
+			//e.PublishBirth(ctx, log)
 			return e
 		}
 		log.Errorln("Device id not set ⛔")
@@ -415,9 +422,8 @@ func (e *EdgeNodeSvc) ShutdownDevice(ctx context.Context, deviceId string, log *
 	}
 
 	// Building up the Death Certificate MQTT Payload.
-	seq := deviceToShutdown.GetNextDeviceSeqNum(log)
-	payload := model.NewSparkplubBPayload(time.Now(), seq).
-		AddMetric(*model.NewMetric("bdSeq", sparkplug.DataType_UInt64, 1, deviceToShutdown.DeviceBdSeq))
+	seq := GetNextSeqNum(log)
+	payload := model.NewSparkplubBPayload(time.Now(), seq)
 
 	// The Edge of Network (EoN) Node is responsible for publishing DDEATH of its devices.
 	// When the EoN Node shuts down unexpectedly, the broker will send its NDEATH as well as
@@ -457,16 +463,34 @@ func (e *EdgeNodeSvc) ShutdownDevice(ctx context.Context, deviceId string, log *
 	return e
 }
 
+func IsDeviceMessage(topic string) (isDcmd bool, deviceId string) {
+	topicParts := strings.Split(topic, "/")
+	if topicParts[2] == "DCMD" {
+		isDcmd = true
+		deviceId = topicParts[4]
+	} else {
+		isDcmd = false
+	}
+
+	return isDcmd, deviceId
+}
+
 // GetNextSeqNum used to get the sequence number
 func GetNextSeqNum(log *logrus.Logger) uint64 {
 	retSeq := Seq
-	if Seq == 256 {
+	if Seq == 255 {
 		Seq = 0
 	} else {
 		Seq++
 	}
 	log.WithField("Seq", retSeq).Debugf("Next Seq : %d 🔔\n", Seq)
 	return retSeq
+}
+
+func GetNextAliasRange(size uint64) uint64 {
+	retAlias := Alias
+	Alias = Alias + size
+	return retAlias
 }
 
 // IncrementBdSeqNum used to increment the Bd sequence number

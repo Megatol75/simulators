@@ -15,7 +15,7 @@
     "eon_node": {
         "namespace": "spBv1.0",
         "group_id": "sim",
-        "node_id": "SparkplugB",
+        "node_id": "13",
         "devices": [
             {
                 "device_id": "emulatedDevice",

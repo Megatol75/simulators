@@ -7,6 +7,7 @@ import (
 
 	"github.com/Megatol75/simulators/iotSensorsMQTT-SpB/internal/component"
 	"github.com/Megatol75/simulators/iotSensorsMQTT-SpB/internal/model"
+	"github.com/Megatol75/simulators/iotSensorsMQTT-SpB/internal/simulators"
 	sparkplug "github.com/Megatol75/simulators/iotSensorsMQTT-SpB/third_party/sparkplug_b"
 	"github.com/eclipse/paho.golang/autopaho"
 	"github.com/eclipse/paho.golang/paho"
@@ -361,6 +362,7 @@ func (e *EdgeNodeSvc) OnMessageArrived(ctx context.Context, msg *paho.Publish, l
 				}
 
 				d := NewDeviceInstance(
+					e,
 					ctx,
 					e.Namespace,
 					e.GroupId,
@@ -403,6 +405,54 @@ func (e *EdgeNodeSvc) AddDevice(device *DeviceSvc, log *logrus.Logger) *EdgeNode
 	}
 	log.Errorln("Device is not configured ⛔")
 	return e
+}
+
+func (e *EdgeNodeSvc) PublishDeviceData(ctx context.Context, deviceId string, alias uint64, data simulators.SensorData, log *logrus.Logger) {
+	seq := GetNextSeqNum(log)
+	topic := e.Namespace + "/" + e.GroupId + "/DDATA/" + e.NodeId + "/" + deviceId
+	payload := model.NewSparkplubBPayload(time.Now(), seq).
+		// Metric name - should only be included on birth
+		AddMetric(*model.NewMetric("", 10, alias, data.Value).SetTimestamp(data.Timestamp))
+
+	// Encoding the sparkplug Payload.
+	msg, err := NewSparkplugBEncoder(log).GetBytes(payload)
+
+	if err != nil {
+		log.WithFields(logrus.Fields{
+			"Groupe Id": e.GroupId,
+			"Node Id":   e.NodeId,
+			"Device Id": deviceId,
+			"Err":       err,
+		}).Errorln("Error encoding the sparkplug payload, not publishing.. ⛔")
+		return
+	}
+
+	_, err = e.SessionHandler.MqttClient.Publish(ctx, &paho.Publish{
+		QoS:     e.SessionHandler.MqttConfigs.QoS,
+		Topic:   topic,
+		Payload: msg,
+	})
+
+	if err != nil {
+		log.WithFields(logrus.Fields{
+			"Groupe Id":   e.GroupId,
+			"Node Id":     e.NodeId,
+			"Device Id":   deviceId,
+			"Err":         err,
+			"Message Seq": seq,
+		}).Errorln("Connection with the MQTT broker is currently down, dropping data.. ⛔")
+		UnAckMsgs.Inc()
+	} else {
+		AckMsgs.Inc()
+		log.WithFields(logrus.Fields{
+			"Groupe Id":   e.GroupId,
+			"Node Id":     e.NodeId,
+			"Device Id":   deviceId,
+			"Message Seq": seq,
+		}).Infoln("✅ DDATA Published to the broker ✅")
+		CachedMsgs.Set(0)
+	}
+
 }
 
 // ShutdownDevice used to shutdown a given device, publish its DDEATH and detached it from the EoN Node.

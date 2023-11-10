@@ -10,7 +10,6 @@ import (
 
 var (
 	ErrMetricIsNull        = errors.New("metric is Null")
-	ErrMetricValueIsNull   = errors.New("metric value is Null")
 	ErrUnsupportedDataType = errors.New("unsupported data type")
 	ErrDataTypeConflict    = errors.New("data type conflict")
 )
@@ -49,12 +48,12 @@ func (m *Metric) ConvertMetric(protoMetric *sparkplug.Payload_Metric, log *logru
 	}
 
 	if m.Value == nil {
-		return ErrMetricValueIsNull
-	}
-
-	// Set Value
-	if err := m.GetValue(protoMetric, log); err != nil {
-		return err
+		m.IsNull = true
+	} else {
+		// Set Value
+		if err := m.GetValue(protoMetric, log); err != nil {
+			return err
+		}
 	}
 
 	log.WithFields(logrus.Fields{

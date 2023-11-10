@@ -55,6 +55,7 @@ func Run() {
 		deviceContext := context.Background()
 		// Instantiate a new device
 		newDevice := services.NewDeviceInstance(
+			eonNode,
 			deviceContext,
 			eonNode.Namespace,
 			eonNode.GroupId,

@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/Megatol75/simulators/iotSensorsMQTT-SpB/internal/component"
@@ -59,6 +60,7 @@ type EdgeNodeSvc struct {
 	NodeId         string
 	Devices        map[string]*DeviceSvc
 	SessionHandler *MqttSessionSvc
+	connMut        sync.Mutex
 }
 
 // NewEdgeNodeInstance used to instantiate a new instance of the EoN Node.
@@ -408,6 +410,7 @@ func (e *EdgeNodeSvc) AddDevice(device *DeviceSvc, log *logrus.Logger) *EdgeNode
 }
 
 func (e *EdgeNodeSvc) PublishDeviceData(ctx context.Context, deviceId string, alias uint64, data simulators.SensorData, log *logrus.Logger) {
+	e.connMut.Lock()
 	seq := GetNextSeqNum(log)
 	topic := e.Namespace + "/" + e.GroupId + "/DDATA/" + e.NodeId + "/" + deviceId
 	payload := model.NewSparkplubBPayload(time.Now(), seq).
@@ -432,6 +435,8 @@ func (e *EdgeNodeSvc) PublishDeviceData(ctx context.Context, deviceId string, al
 		Topic:   topic,
 		Payload: msg,
 	})
+
+	e.connMut.Unlock()
 
 	if err != nil {
 		log.WithFields(logrus.Fields{

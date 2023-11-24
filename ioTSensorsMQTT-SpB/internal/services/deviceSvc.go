@@ -2,7 +2,6 @@ package services
 
 import (
 	"context"
-	"math/rand"
 	"sync"
 	"time"
 
@@ -28,9 +27,6 @@ type DeviceSvc struct {
 	// Retain device's data in the broker
 	retain bool
 
-	// Sensor Alias, to be used in DDATA, instead of name
-	Alias uint64
-
 	StartTime time.Time
 	connMut   sync.RWMutex
 
@@ -47,7 +43,6 @@ type DeviceSvc struct {
 // NewDeviceInstance used to instantiate a new instance of a device.
 func NewDeviceInstance(
 	node *EdgeNodeSvc,
-	ctx context.Context,
 	namespace, groupId, nodeId, deviceId string,
 	log *logrus.Logger,
 	sessionHandler *MqttSessionSvc,
@@ -77,8 +72,6 @@ func NewDeviceInstance(
 	}
 
 	d.StartTime = time.Now()
-	d.Alias = uint64(100 + rand.Int63n(10000))
-	//d.SessionHandler = mqttSession
 	return d
 }
 
@@ -88,7 +81,6 @@ func (d *DeviceSvc) PublishBirth(ctx context.Context, log *logrus.Logger) {
 
 	// Prevent race condition on the seq number when building/publishing
 	d.connMut.RLock()
-	//seq := d.GetNextDeviceSeqNum(log)
 	seq := GetNextSeqNum(log)
 	alias10 := GetNextAliasRange(10)
 	d.connMut.RUnlock()
@@ -115,13 +107,16 @@ func (d *DeviceSvc) PublishBirth(ctx context.Context, log *logrus.Logger) {
 		AddMetric(*model.NewMetric("Properties/Up time ms", sparkplug.DataType_Int64, alias10+9, upTime))
 
 	for _, sim := range d.Simulators {
-		var i uint64 = 1
+		d.connMut.RLock()
+		alias4 := GetNextAliasRange(4)
+		d.connMut.RUnlock()
+
 		if sim != nil {
+			sim.Alias = alias4
 			payload.AddMetric(*model.NewMetric(d.DeviceId+"/Sensors/"+sim.SensorId, sparkplug.DataType_Double, sim.Alias, nil)).
-				AddMetric(*model.NewMetric(d.DeviceId+"/Sensors/"+sim.SensorId+"/Minimum delay", sparkplug.DataType_UInt32, sim.Alias+i+1, sim.DelayMin)).
-				AddMetric(*model.NewMetric(d.DeviceId+"/Sensors/"+sim.SensorId+"/Maximum delay", sparkplug.DataType_UInt32, sim.Alias+i+2, sim.DelayMax)).
-				AddMetric(*model.NewMetric(d.DeviceId+"/Sensors/"+sim.SensorId+"/Randomized", sparkplug.DataType_Boolean, sim.Alias+i+3, sim.Randomize))
-			i++
+				AddMetric(*model.NewMetric(d.DeviceId+"/Sensors/"+sim.SensorId+"/Minimum delay", sparkplug.DataType_UInt32, sim.Alias+1, sim.DelayMin)).
+				AddMetric(*model.NewMetric(d.DeviceId+"/Sensors/"+sim.SensorId+"/Maximum delay", sparkplug.DataType_UInt32, sim.Alias+2, sim.DelayMax)).
+				AddMetric(*model.NewMetric(d.DeviceId+"/Sensors/"+sim.SensorId+"/Randomized", sparkplug.DataType_Boolean, sim.Alias+3, sim.Randomize))
 		}
 	}
 
@@ -292,7 +287,7 @@ func (d *DeviceSvc) OnMessageArrived(ctx context.Context, msg *paho.Publish, log
 					}
 				}
 
-				d.AddSimulator(ctx,
+				d.AddSimulator(
 					simulators.NewIoTSensorSim(
 						newSensor.name,
 						newSensor.mean,
@@ -300,8 +295,7 @@ func (d *DeviceSvc) OnMessageArrived(ctx context.Context, msg *paho.Publish, log
 						newSensor.delayMin,
 						newSensor.delayMax,
 						newSensor.randomize,
-					), log,
-				).RunSimulators(log).RunPublisher(ctx, log)
+					), log).RunSimulators(log).RunPublisher(ctx, log)
 
 			}
 
@@ -427,7 +421,7 @@ func (d *DeviceSvc) OnMessageArrived(ctx context.Context, msg *paho.Publish, log
 }
 
 // AddSimulator used to attach a simulated sensor to the device
-func (d *DeviceSvc) AddSimulator(ctx context.Context, sim *simulators.IoTSensorSim, log *logrus.Logger) *DeviceSvc {
+func (d *DeviceSvc) AddSimulator(sim *simulators.IoTSensorSim, log *logrus.Logger) *DeviceSvc {
 	if sim == nil {
 		log.Errorln("Sensor not defined ⛔")
 		return d
@@ -456,7 +450,6 @@ func (d *DeviceSvc) AddSimulator(ctx context.Context, sim *simulators.IoTSensorS
 			"Sensor Id": sim.SensorId,
 			"Device Id": d.DeviceId,
 		}).Infoln("Sensor added successfully ✅")
-		d.PublishBirth(ctx, log)
 		return d
 	} else {
 		log.Errorln("Sensor id not defined ⛔")

@@ -49,14 +49,10 @@ func Run() {
 	// Wait for the EoN Node to establish an MQTT connection
 	eonNode.SessionHandler.MqttClient.AwaitConnection(eodNodeContext)
 
-	eonNode.PublishBirth(eodNodeContext, logger)
-
 	for _, device := range cfg.EoNNodeConfig.Devices {
-		deviceContext := context.Background()
 		// Instantiate a new device
 		newDevice := services.NewDeviceInstance(
 			eonNode,
-			deviceContext,
 			eonNode.Namespace,
 			eonNode.GroupId,
 			eonNode.NodeId,
@@ -85,7 +81,6 @@ func Run() {
 		// Add the defined simulated IoTSensors to the new device
 		for _, sim := range device.Simulators {
 			newDevice.AddSimulator(
-				deviceContext,
 				simulators.NewIoTSensorSim(
 					sim.SensorId,
 					sim.Mean,
@@ -94,9 +89,20 @@ func Run() {
 					sim.DelayMax,
 					sim.Randomize,
 				),
-				logger,
-			).RunSimulators(logger).RunPublisher(deviceContext, logger)
+				logger)
 		}
+	}
+
+	eonNode.PublishBirth(eodNodeContext, logger)
+
+	//publish DBIRTHs
+	for _, d := range eonNode.Devices {
+		d.PublishBirth(eodNodeContext, logger)
+	}
+
+	//Start publishing
+	for _, d := range eonNode.Devices {
+		d.RunSimulators(logger).RunPublisher(eodNodeContext, logger)
 	}
 
 	if cfg.EnablePrometheus {

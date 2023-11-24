@@ -29,6 +29,14 @@
                         "delay_min": 3,
                         "delay_max": 6,
                         "randomize": true
+                    },
+                    {
+                        "sensor_id": "Pressure",
+                        "mean": 10.6,
+                        "standard_deviation": 3.1,
+                        "delay_min": 5,
+                        "delay_max": 7,
+                        "randomize": true
                     }
                 ]
             },

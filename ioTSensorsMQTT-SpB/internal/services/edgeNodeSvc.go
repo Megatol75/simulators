@@ -181,11 +181,15 @@ func (e *EdgeNodeSvc) PublishBirth(ctx context.Context, log *logrus.Logger) *Edg
 		AddMetric(*model.NewMetric("Properties/Platform", sparkplug.DataType_String, alias20+17, props.Platform)).
 		AddMetric(*model.NewMetric("Properties/Hostname", sparkplug.DataType_String, alias20+18, props.Hostname))
 
+	numberOfDevices := len(e.Devices)
+	aliasDev := GetNextAliasRange(uint64(numberOfDevices))
+	var i uint64 = 0
+
 	for name, d := range e.Devices {
-		var i uint64 = 1
 		if d != nil {
 			upTime := int64(time.Since(d.StartTime) / 1e+6)
-			payload.AddMetric(*model.NewMetric("Devices/"+name+"/Up Time ms", sparkplug.DataType_Int64, d.Alias+i, upTime))
+			payload.AddMetric(*model.NewMetric("Devices/"+name+"/Up Time ms", sparkplug.DataType_Int64, aliasDev+i, upTime))
+			i++
 		}
 	}
 
@@ -283,6 +287,10 @@ func (e *EdgeNodeSvc) OnMessageArrived(ctx context.Context, msg *paho.Publish, l
 				}).Errorln("Wrong data type received for this NCMD ⛔")
 			} else if value.BooleanValue {
 				e.PublishBirth(ctx, log)
+
+				for _, d := range e.Devices {
+					d.PublishBirth(ctx, log)
+				}
 			}
 
 		case "Node Control/RemoveDevice":
@@ -365,7 +373,6 @@ func (e *EdgeNodeSvc) OnMessageArrived(ctx context.Context, msg *paho.Publish, l
 
 				d := NewDeviceInstance(
 					e,
-					ctx,
 					e.Namespace,
 					e.GroupId,
 					e.NodeId,

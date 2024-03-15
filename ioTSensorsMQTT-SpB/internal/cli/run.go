@@ -2,6 +2,7 @@ package cli
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"os"
 	"os/signal"
@@ -61,6 +62,9 @@ func Run() {
 			eonNode.SessionHandler,
 			device.TTL,
 			device.StoreAndForward,
+			device.DelayMin,
+			device.DelayMax,
+			device.Randomize,
 		)
 
 		// Attach the new device to the EoN Node
@@ -80,16 +84,17 @@ func Run() {
 
 		// Add the defined simulated IoTSensors to the new device
 		for _, sim := range device.Simulators {
-			newDevice.AddSimulator(
-				simulators.NewIoTSensorSim(
-					sim.SensorId,
-					sim.Mean,
-					sim.Std,
-					sim.DelayMin,
-					sim.DelayMax,
-					sim.Randomize,
-				),
-				logger)
+			numberOfSensors := sim.Copy
+
+			for i := 0; i < numberOfSensors; i++ {
+				newDevice.AddSimulator(
+					simulators.NewIoTSensorSim(
+						fmt.Sprintf("%v%03d", sim.SensorId, i),
+						sim.Mean+float64(i),
+						sim.Std,
+					),
+					logger)
+			}
 		}
 	}
 
@@ -102,7 +107,7 @@ func Run() {
 
 	//Start publishing
 	for _, d := range eonNode.Devices {
-		d.RunSimulators(logger).RunPublisher(eodNodeContext, logger)
+		d.Run(logger).RunPublisher(eodNodeContext, logger)
 	}
 
 	if cfg.EnablePrometheus {

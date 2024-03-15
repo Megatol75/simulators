@@ -8,7 +8,6 @@ import (
 
 	"github.com/Megatol75/simulators/iotSensorsMQTT-SpB/internal/component"
 	"github.com/Megatol75/simulators/iotSensorsMQTT-SpB/internal/model"
-	"github.com/Megatol75/simulators/iotSensorsMQTT-SpB/internal/simulators"
 	sparkplug "github.com/Megatol75/simulators/iotSensorsMQTT-SpB/third_party/sparkplug_b"
 	"github.com/eclipse/paho.golang/autopaho"
 	"github.com/eclipse/paho.golang/paho"
@@ -381,6 +380,9 @@ func (e *EdgeNodeSvc) OnMessageArrived(ctx context.Context, msg *paho.Publish, l
 					e.SessionHandler,
 					addDevice.TtlValue,
 					addDevice.EnabledValue,
+					5,
+					7,
+					true,
 				)
 
 				// Add new device
@@ -416,13 +418,15 @@ func (e *EdgeNodeSvc) AddDevice(device *DeviceSvc, log *logrus.Logger) *EdgeNode
 	return e
 }
 
-func (e *EdgeNodeSvc) PublishDeviceData(ctx context.Context, deviceId string, alias uint64, data simulators.SensorData, log *logrus.Logger) {
+func (e *EdgeNodeSvc) PublishDeviceData(ctx context.Context, deviceId string, data []SensorReading, log *logrus.Logger) {
 	e.connMut.Lock()
 	seq := GetNextSeqNum(log)
 	topic := e.Namespace + "/" + e.GroupId + "/DDATA/" + e.NodeId + "/" + deviceId
-	payload := model.NewSparkplubBPayload(time.Now(), seq).
-		// Metric name - should only be included on birth
-		AddMetric(*model.NewMetric("", 10, alias, data.Value).SetTimestamp(data.Timestamp))
+	payload := model.NewSparkplubBPayload(time.Now(), seq)
+
+	for _, sr := range data {
+		payload.AddMetric(*model.NewMetric("", 10, sr.Alias, sr.Value).SetTimestamp(sr.Timestamp))
+	}
 
 	// Encoding the sparkplug Payload.
 	msg, err := NewSparkplugBEncoder(log).GetBytes(payload)

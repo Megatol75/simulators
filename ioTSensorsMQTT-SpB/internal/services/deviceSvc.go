@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"math/rand"
 	"sync"
 	"time"
 
@@ -38,6 +39,25 @@ type DeviceSvc struct {
 
 	// Simulated sensors data type == float64
 	CacheStore *ttlcache.Cache[string, simulators.SensorData]
+
+	// Channel to send data to device
+	SensorReadings chan []SensorReading
+
+	// Check if it's running
+	IsRunning bool
+
+	// Delay between each data point
+	DelayMin uint32
+	DelayMax uint32
+	// Randomize delay between data points if true,
+	// otherwise DelayMin will be set as fixed delay
+	Randomize bool
+}
+
+type SensorReading struct {
+	Alias     uint64
+	Value     float64
+	Timestamp time.Time
 }
 
 // NewDeviceInstance used to instantiate a new instance of a device.
@@ -48,6 +68,9 @@ func NewDeviceInstance(
 	sessionHandler *MqttSessionSvc,
 	ttl uint32,
 	enabled bool,
+	DelayMin uint32,
+	DelayMax uint32,
+	Randomize bool,
 ) *DeviceSvc {
 	log.Debugln("Setting up a new device instance 🔔")
 
@@ -60,8 +83,12 @@ func NewDeviceInstance(
 		DeviceId:       deviceId,
 		retain:         false,
 		Simulators:     make(map[string]*simulators.IoTSensorSim),
+		SensorReadings: make(chan []SensorReading),
 		TTL:            ttl,
 		Enabled:        enabled,
+		DelayMin:       DelayMin,
+		DelayMax:       DelayMax,
+		Randomize:      Randomize,
 	}
 
 	// If store and forward enabled
@@ -73,6 +100,61 @@ func NewDeviceInstance(
 
 	d.StartTime = time.Now()
 	return d
+}
+
+func (d *DeviceSvc) Run(log *logrus.Logger) *DeviceSvc {
+	if d.IsRunning {
+		log.WithField("Device Id", d.DeviceId).Debugln("Already running 🔔")
+		return d
+	}
+
+	d.IsRunning = true
+
+	if d.DelayMin <= 0 {
+		d.DelayMin = 1
+	} else if d.DelayMin >= d.DelayMax && d.Randomize {
+		d.DelayMax = d.DelayMin
+	}
+
+	go func() {
+		delay := d.DelayMin
+		log.WithField("Device Id", d.DeviceId).Debugln("Started running 🔔")
+
+		readings := d.getAllReadings()
+
+		d.SensorReadings <- readings
+
+		for {
+			select {
+			case <-time.After(time.Duration(delay) * time.Second):
+				if d.Randomize {
+					delay = uint32(rand.Intn(int(d.DelayMax-d.DelayMin))) + d.DelayMin
+				}
+				readings := d.getAllReadings()
+				d.SensorReadings <- readings
+			}
+		}
+	}()
+
+	return d
+}
+
+func (d *DeviceSvc) getAllReadings() []SensorReading {
+	readings := make([]SensorReading, len(d.Simulators))
+	i := 0
+
+	for _, sim := range d.Simulators {
+		sensorData := sim.CalculateNextValue()
+		sr := SensorReading{
+			Alias:     d.Simulators[sim.SensorId].Alias,
+			Value:     sensorData.Value,
+			Timestamp: sensorData.Timestamp,
+		}
+
+		readings[i] = sr
+		i++
+	}
+	return readings
 }
 
 // PublishBirth used to publish the device DBIRTH certificate to the broker.
@@ -108,15 +190,12 @@ func (d *DeviceSvc) PublishBirth(ctx context.Context, log *logrus.Logger) {
 
 	for _, sim := range d.Simulators {
 		d.connMut.RLock()
-		alias4 := GetNextAliasRange(4)
+		alias1 := GetNextAliasRange(1)
 		d.connMut.RUnlock()
 
 		if sim != nil {
-			sim.Alias = alias4
-			payload.AddMetric(*model.NewMetric(d.DeviceId+"/Sensors/"+sim.SensorId, sparkplug.DataType_Double, sim.Alias, nil)).
-				AddMetric(*model.NewMetric(d.DeviceId+"/Sensors/"+sim.SensorId+"/Minimum delay", sparkplug.DataType_UInt32, sim.Alias+1, sim.DelayMin)).
-				AddMetric(*model.NewMetric(d.DeviceId+"/Sensors/"+sim.SensorId+"/Maximum delay", sparkplug.DataType_UInt32, sim.Alias+2, sim.DelayMax)).
-				AddMetric(*model.NewMetric(d.DeviceId+"/Sensors/"+sim.SensorId+"/Randomized", sparkplug.DataType_Boolean, sim.Alias+3, sim.Randomize))
+			sim.Alias = alias1
+			payload.AddMetric(*model.NewMetric(sim.SensorId, sparkplug.DataType_Double, sim.Alias, nil))
 		}
 	}
 
@@ -292,10 +371,7 @@ func (d *DeviceSvc) OnMessageArrived(ctx context.Context, msg *paho.Publish, log
 						newSensor.name,
 						newSensor.mean,
 						newSensor.std,
-						newSensor.delayMin,
-						newSensor.delayMax,
-						newSensor.randomize,
-					), log).RunSimulators(log).RunPublisher(ctx, log)
+					), log).Run(log).RunPublisher(ctx, log)
 
 			}
 
@@ -489,46 +565,22 @@ func (d *DeviceSvc) ShutdownSimulator(ctx context.Context, sensorId string, log 
 	return d
 }
 
-// RunSimulators used to run all the simulated sensors attached to the device
-func (d *DeviceSvc) RunSimulators(log *logrus.Logger) *DeviceSvc {
-	for _, sim := range d.Simulators {
-		if sim.IsRunning {
-			continue
-		}
-		sim.Run(log)
-	}
-	return d
-}
-
 // RunPublisher used to publish all the DDATA to the broker
 func (d *DeviceSvc) RunPublisher(ctx context.Context, log *logrus.Logger) *DeviceSvc {
-	for _, sim := range d.Simulators {
-		go func(d *DeviceSvc, s *simulators.IoTSensorSim) {
-			for {
-				select {
-				case <-d.SessionHandler.MqttClient.Done():
-					log.Infoln("MQTT session terminated, cleaning up.. 🔔")
-					for _, sim := range d.Simulators {
-						d.ShutdownSimulator(ctx, sim.SensorId, log)
-					}
-					return
-				case data := <-s.SensorData:
-					alias := d.Simulators[s.SensorId].Alias
-					d.EoN.PublishDeviceData(ctx, d.DeviceId, alias, data, log)
-				case _, open := <-s.Shutdown:
-					if open {
-						log.WithFields(logrus.Fields{
-							"Device Id": d.DeviceId,
-							"Sensor Id": s.SensorId,
-						}).Warnln("Sensor is turning off ⛔")
-						// Release this goroutine when the sensor is turning off
-						return
-					}
-
+	go func(d *DeviceSvc) {
+		for {
+			select {
+			case <-d.SessionHandler.MqttClient.Done():
+				log.Infoln("MQTT session terminated, cleaning up.. 🔔")
+				for _, sim := range d.Simulators {
+					d.ShutdownSimulator(ctx, sim.SensorId, log)
 				}
+				return
+			case data := <-d.SensorReadings:
+				d.EoN.PublishDeviceData(ctx, d.DeviceId, data, log)
 			}
-		}(d, sim)
-	}
+		}
+	}(d)
 	return d
 }
 

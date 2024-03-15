@@ -4,8 +4,6 @@ import (
 	"math"
 	"math/rand"
 	"time"
-
-	"github.com/sirupsen/logrus"
 )
 
 type IoTSensorSim struct {
@@ -18,15 +16,6 @@ type IoTSensorSim struct {
 	// sensor data current value
 	currentValue float64
 
-	// Delay between each data point
-	DelayMin uint32
-	DelayMax uint32
-	// Randomize delay between data points if true,
-	// otherwise DelayMin will be set as fixed delay
-	Randomize bool
-
-	// Channel to send data to device
-	SensorData chan SensorData
 	// Shutdown the sensor
 	Shutdown chan bool
 
@@ -62,16 +51,12 @@ type UpdateSensorParams struct {
 type SensorData struct {
 	Value     float64
 	Timestamp time.Time
-	Seq       uint64
 }
 
 func NewIoTSensorSim(
 	id string,
 	mean,
 	standardDeviation float64,
-	DelayMin uint32,
-	DelayMax uint32,
-	Randomize bool,
 ) *IoTSensorSim {
 	isAssigned := false
 
@@ -82,18 +67,14 @@ func NewIoTSensorSim(
 		currentValue:      mean - rand.Float64(),
 		IsRunning:         false,
 		IsAssigned:        &isAssigned,
-		SensorData:        make(chan SensorData),
 		// Add a buffered channel with capacity 1
 		// to send a shutdown signal from the device.
-		Shutdown:  make(chan bool, 1),
-		DelayMin:  DelayMin,
-		DelayMax:  DelayMax,
-		Randomize: Randomize,
-		Update:    make(chan UpdateSensorParams, 1),
+		Shutdown: make(chan bool, 1),
+		Update:   make(chan UpdateSensorParams, 1),
 	}
 }
 
-func (s *IoTSensorSim) calculateNextValue() SensorData {
+func (s *IoTSensorSim) CalculateNextValue() SensorData {
 	// first calculate how much the value will be changed
 	valueChange := rand.Float64() * math.Abs(s.standardDeviation) / 10
 	// second decide if the value is increased or decreased
@@ -136,66 +117,4 @@ func (s *IoTSensorSim) decideFactor() float64 {
 		return continueDirection
 	}
 	return changeDirection
-}
-
-func (s *IoTSensorSim) Run(log *logrus.Logger) {
-	if s.IsRunning {
-		log.WithField("Senor Id", s.SensorId).Debugln("Already running 🔔")
-		return
-	}
-
-	s.IsRunning = true
-	if s.DelayMin <= 0 {
-		s.DelayMin = 1
-	} else if s.DelayMin >= s.DelayMax && s.Randomize {
-		s.DelayMax = s.DelayMin
-	}
-
-	go func() {
-		delay := s.DelayMin
-		log.WithField("Senor Id", s.SensorId).Debugln("Started running 🔔")
-		s.SensorData <- s.calculateNextValue()
-		for {
-			select {
-			case _, open := <-s.Shutdown:
-				log.WithField("Senor Id", s.SensorId).Debugln("Got shutdown signal 🔔")
-				s.IsRunning = false
-				if open {
-					// Send signal to publisher to shutdown
-					s.Shutdown <- true
-				}
-				return
-			case <-time.After(time.Duration(delay) * time.Second):
-				if s.Randomize {
-					// log.WithField("Previous Delay :", delay).Warnln("🔔🔔")
-					delay = uint32(rand.Intn(int(s.DelayMax-s.DelayMin))) + s.DelayMin
-					// log.WithField("Next Delay :", delay).Infoln("🔔🔔")
-				}
-				s.SensorData <- s.calculateNextValue()
-			case newParams := <-s.Update:
-				if newParams.DelayMin > 0 && !(newParams.DelayMin > newParams.DelayMax && newParams.Randomize) {
-					s.mean = newParams.Mean
-					s.standardDeviation = newParams.Std
-					s.DelayMax = newParams.DelayMax
-					s.DelayMin = newParams.DelayMin
-					s.Randomize = newParams.Randomize
-					delay = newParams.DelayMin
-					log.WithFields(logrus.Fields{
-						"Senor Id":  s.SensorId,
-						"Min delay": newParams.DelayMin,
-						"Max delay": newParams.DelayMax,
-						"Randomize": newParams.Randomize,
-					}).Debugln("Got updated parameters, sensor updated 🔔")
-				} else {
-					log.WithFields(logrus.Fields{
-						"Senor Id":  s.SensorId,
-						"Min delay": newParams.DelayMin,
-						"Max delay": newParams.DelayMax,
-						"Randomize": newParams.Randomize,
-					}).Debugln("Wrong parameters, not updating sensor 🔔")
-				}
-			}
-		}
-	}()
-
 }

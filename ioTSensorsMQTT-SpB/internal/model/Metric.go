@@ -142,6 +142,12 @@ func (m *Metric) GetValue(protoMetric *sparkplug.Payload_Metric, log *logrus.Log
 			return ErrDataTypeConflict
 		}
 		protoMetric.Value = &sparkplug.Payload_Metric_LongValue{LongValue: uint64(value)}
+	case sparkplug.DataType_UInt16:
+		value, ok := m.Value.(uint16)
+		if !ok {
+			return ErrDataTypeConflict
+		}
+		protoMetric.Value = &sparkplug.Payload_Metric_IntValue{IntValue: uint32(value)}
 	case sparkplug.DataType_UInt32:
 		value, ok := m.Value.(uint32)
 		if !ok {

@@ -21,14 +21,15 @@
                 "device_id": "emulatedDevice",
                 "store_and_forward": true,
                 "time_to_live": 10,
+                "delay_min": 5,
+                "delay_max": 7,
+		        "randomize": true,
                 "simulators": [
                     {
                         "sensor_id": "Temperature",
                         "mean": 30.6,
                         "standard_deviation": 3.1,
-                        "delay_min": 3,
-                        "delay_max": 6,
-                        "randomize": false
+			            "copy": 1
                     }
                 ]
             },
@@ -36,14 +37,15 @@
                 "device_id": "anotherEmulatedDevice",
                 "store_and_forward": true,
                 "time_to_live": 15,
+		        "delay_min": 40,
+                "delay_max": 100,
+                "randomize": false,
                 "simulators": [
                     {
                         "sensor_id": "Humidity",
                         "mean": 40.7,
                         "standard_deviation": 2.3,
-                        "delay_min": 4,
-                        "delay_max": 10,
-                        "randomize": true
+			            "copy": 1
                     }
                 ]
             }

@@ -1,14 +1,14 @@
 {
     "mqtt_config": {
         "url": "tcp://localhost:1883",
-        "qos": 1,
+        "qos": 0,
         "client_id": "",
         "user": "",
         "password": "",
         "keep_alive": 5,
         "connect_timeout": "30s",
         "connect_retry": 3,
-        "clean_start": false,
+        "clean_start": true,
         "session_expiry_interval" : 60 
     },
 
@@ -68,9 +68,5 @@
         "level": "INFO",
         "format": "TEXT",
         "disable_timestamp": true
-    },
-    
-    "enable_prometheus": true
-
-
+    }
 }

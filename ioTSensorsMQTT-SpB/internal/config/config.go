@@ -9,10 +9,9 @@ import (
 )
 
 type Cfg struct {
-	MQTTConfig       component.MQTTConfig `mapstructure:"mqtt_config"`
-	EoNNodeConfig    component.EdgeNode   `mapstructure:"eon_node"`
-	LoggerConfig     component.Logger     `mapstructure:"logger"`
-	EnablePrometheus bool                 `mapstructure:"enable_prometheus"`
+	MQTTConfig    component.MQTTConfig `mapstructure:"mqtt_config"`
+	EoNNodeConfig component.EdgeNode   `mapstructure:"eon_node"`
+	LoggerConfig  component.Logger     `mapstructure:"logger"`
 }
 
 func GetConfigs() Cfg {
@@ -109,8 +108,6 @@ func setDefault(v *viper.Viper, log *logrus.Logger) Cfg {
 			"format": "TEXT",
 			"disable_timestamp": false
 		},
-
-		"enable_prometheus": true
 	}
 	`)
 

@@ -12,7 +12,6 @@ import (
 	"github.com/eclipse/paho.golang/autopaho"
 	"github.com/eclipse/paho.golang/paho"
 	"github.com/matishsiao/goInfo"
-	"github.com/prometheus/client_golang/prometheus"
 	"github.com/sirupsen/logrus"
 	proto "google.golang.org/protobuf/proto"
 )
@@ -27,29 +26,6 @@ var (
 	Maintainer string = "Amine Amaach"
 	Website    string = "amineamaach.me"
 	SourceCode string = "https://github.com/amineamaach/simulators"
-)
-
-var (
-	AckMsgs = prometheus.NewGauge(prometheus.GaugeOpts{
-		Namespace: "IoTSensors_project",
-		Subsystem: "SparkplugB",
-		Name:      "acknowledged_messages",
-		Help:      "Number of acknowledged messages by the broker",
-	})
-
-	UnAckMsgs = prometheus.NewGauge(prometheus.GaugeOpts{
-		Namespace: "ioTSensors_project",
-		Subsystem: "SparkplugB",
-		Name:      "unacknowledged_messages",
-		Help:      "Number of unacknowledged messages by the broker",
-	})
-
-	CachedMsgs = prometheus.NewGauge(prometheus.GaugeOpts{
-		Namespace: "ioTSensors_project",
-		Subsystem: "SparkplugB",
-		Name:      "cached_messages",
-		Help:      "Number of cached messages waiting to processed",
-	})
 )
 
 // EdgeNodeSvc struct describes the EoN Node properties
@@ -132,17 +108,6 @@ func NewEdgeNodeInstance(
 			"Node ID":   eonNode.NodeId,
 		}).Errorln("Error establishing MQTT session ⛔")
 		return nil, err
-	}
-
-	// Register prometheus collectors
-	if err := prometheus.Register(AckMsgs); err != nil {
-		log.Warnln("Failed to register prometheus collector : [AckMsgs]")
-	}
-	if err = prometheus.Register(UnAckMsgs); err != nil {
-		log.Warnln("Failed to register prometheus collector : [UnAckMsgs]")
-	}
-	if err := prometheus.Register(CachedMsgs); err != nil {
-		log.Warnln("Failed to register prometheus collector : [Cached]")
 	}
 
 	StartTime = time.Now()
@@ -457,16 +422,13 @@ func (e *EdgeNodeSvc) PublishDeviceData(ctx context.Context, deviceId string, da
 			"Err":         err,
 			"Message Seq": seq,
 		}).Errorln("Connection with the MQTT broker is currently down, dropping data.. ⛔")
-		UnAckMsgs.Inc()
 	} else {
-		AckMsgs.Inc()
 		log.WithFields(logrus.Fields{
 			"Groupe Id":   e.GroupId,
 			"Node Id":     e.NodeId,
 			"Device Id":   deviceId,
 			"Message Seq": seq,
 		}).Infoln("✅ DDATA Published to the broker ✅")
-		CachedMsgs.Set(0)
 	}
 
 }

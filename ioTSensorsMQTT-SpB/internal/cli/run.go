@@ -3,7 +3,6 @@ package cli
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
@@ -15,7 +14,6 @@ import (
 	"github.com/Megatol75/simulators/iotSensorsMQTT-SpB/internal/simulators"
 
 	"github.com/eclipse/paho.golang/paho"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 func Run() {
@@ -110,11 +108,6 @@ func Run() {
 		d.Run(logger).RunPublisher(eodNodeContext, logger)
 	}
 
-	if cfg.EnablePrometheus {
-		http.Handle("/metrics", promhttp.Handler())
-		http.ListenAndServe(":8080", nil)
-	}
-
 	// Wait for a signal before exiting
 	sig := make(chan os.Signal, 1)
 	signal.Notify(sig, os.Interrupt, syscall.SIGTERM)
@@ -126,9 +119,6 @@ func Run() {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 	_ = eonNode.SessionHandler.MqttClient.Disconnect(ctx)
-	for _, d := range eonNode.Devices {
-		d.SessionHandler.MqttClient.Disconnect(ctx)
-	}
 
 	logger.Info("Shutdown complete ✅")
 }

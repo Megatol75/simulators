@@ -293,8 +293,6 @@ func (e *EdgeNodeSvc) OnMessageArrived(ctx context.Context, msg *paho.Publish, l
 			} else if value.BooleanValue {
 				type AddDevice struct {
 					DeviceIdValue string
-					TtlValue      uint32
-					EnabledValue  bool
 				}
 				addDevice := AddDevice{}
 
@@ -310,29 +308,6 @@ func (e *EdgeNodeSvc) OnMessageArrived(ctx context.Context, msg *paho.Publish, l
 							return
 						}
 					}
-					if *param.Name == "StoreAndForward" {
-						if enabled, ok := param.Value.(*sparkplug.Payload_Template_Parameter_BooleanValue); ok {
-							addDevice.EnabledValue = enabled.BooleanValue
-						} else {
-							log.WithFields(logrus.Fields{
-								"Topic": msg.Topic,
-								"Name":  *param.Name,
-							}).Errorln("Failed to parse StoreAndForward value ⛔")
-							return
-						}
-					}
-					if *param.Name == "TTL" {
-						if ttl, ok := param.Value.(*sparkplug.Payload_Template_Parameter_IntValue); ok {
-							addDevice.TtlValue = ttl.IntValue
-						} else {
-							log.WithFields(logrus.Fields{
-								"Topic": msg.Topic,
-								"Name":  *param.Name,
-							}).Errorln("Failed to parse StoreAndForward value ⛔")
-							return
-						}
-					}
-
 				}
 
 				d := NewDeviceInstance(
@@ -343,8 +318,6 @@ func (e *EdgeNodeSvc) OnMessageArrived(ctx context.Context, msg *paho.Publish, l
 					addDevice.DeviceIdValue,
 					log,
 					e.SessionHandler,
-					addDevice.TtlValue,
-					addDevice.EnabledValue,
 					5,
 					7,
 					true,

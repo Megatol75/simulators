@@ -10,7 +10,6 @@ import (
 	"github.com/Megatol75/simulators/iotSensorsMQTT-SpB/internal/simulators"
 	sparkplug "github.com/Megatol75/simulators/iotSensorsMQTT-SpB/third_party/sparkplug_b"
 	"github.com/eclipse/paho.golang/paho"
-	"github.com/jellydator/ttlcache/v3"
 	"github.com/sirupsen/logrus"
 	proto "google.golang.org/protobuf/proto"
 )
@@ -30,15 +29,6 @@ type DeviceSvc struct {
 
 	StartTime time.Time
 	connMut   sync.RWMutex
-
-	// Store and forward in-memory store
-	Enabled bool
-
-	// Period to keep data in the store before deleting it.
-	TTL uint32 // Default 10 minutes
-
-	// Simulated sensors data type == float64
-	CacheStore *ttlcache.Cache[string, simulators.SensorData]
 
 	// Channel to send data to device
 	SensorReadings chan []SensorReading
@@ -66,8 +56,6 @@ func NewDeviceInstance(
 	namespace, groupId, nodeId, deviceId string,
 	log *logrus.Logger,
 	sessionHandler *MqttSessionSvc,
-	ttl uint32,
-	enabled bool,
 	DelayMin uint32,
 	DelayMax uint32,
 	Randomize bool,
@@ -84,18 +72,9 @@ func NewDeviceInstance(
 		retain:         false,
 		Simulators:     make(map[string]*simulators.IoTSensorSim),
 		SensorReadings: make(chan []SensorReading),
-		TTL:            ttl,
-		Enabled:        enabled,
 		DelayMin:       DelayMin,
 		DelayMax:       DelayMax,
 		Randomize:      Randomize,
-	}
-
-	// If store and forward enabled
-	if d.Enabled {
-		d.CacheStore = ttlcache.New(
-			ttlcache.WithTTL[string, simulators.SensorData](time.Duration(d.TTL) * time.Minute),
-		)
 	}
 
 	d.StartTime = time.Now()

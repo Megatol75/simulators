@@ -54,49 +54,45 @@ func setDefault(v *viper.Viper, log *logrus.Logger) Cfg {
 	{
 		"mqtt_config": {
 			"url": "tcp://broker.emqx.io:1883",
-			"qos": 1,
+			"qos": 0,
 			"client_id": "",
 			"user": "",
 			"password": "",
 			"keep_alive": 5,
 			"connect_timeout": "30s",
 			"connect_retry": 3,
-			"clean_start": false,
+			"clean_start": true,
 			"session_expiry_interval" : 60 
 		},
 	
 		"eon_node": {
 			"namespace": "spBv1.0",
-			"group_id": "IoTSensors",
-			"node_id": "SparkplugB",
+			"group_id": "sim",
+			"node_id": "987",
 			"devices": [
 				{
 					"device_id": "emulatedDevice",
-					"store_and_forward": true,
-					"time_to_live": 10,
+					"delay_min": 3,
+					"delay_max": 6,
+					"randomize": true,
 					"simulators": [
 						{
 							"sensor_id": "Temperature",
 							"mean": 30.6,
 							"standard_deviation": 3.1,
-							"delay_min": 3,
-							"delay_max": 6,
-							"randomize": true
 						}
 					]
 				},
 				{
 					"device_id": "anotherEmulatedDevice",
-					"store_and_forward": true,
-					"time_to_live": 15,
+					"delay_min": 4,
+					"delay_max": 10,
+					"randomize": false,
 					"simulators": [
 						{
 							"sensor_id": "Humidity",
 							"mean": 40.7,
 							"standard_deviation": 2.3,
-							"delay_min": 4,
-							"delay_max": 10,
-							"randomize": false
 						}
 					]
 				}

@@ -58,8 +58,6 @@ func Run() {
 			device.DeviceId,
 			logger,
 			eonNode.SessionHandler,
-			device.TTL,
-			device.StoreAndForward,
 			device.DelayMin,
 			device.DelayMax,
 			device.Randomize,

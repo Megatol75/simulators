@@ -3,7 +3,6 @@ package component
 type MQTTConfig struct {
 	URL                   string `mapstructure:"url"`
 	QoS                   uint8  `mapstructure:"qos"`
-	ClientID              string `mapstructure:"client_id"`
 	User                  string `mapstructure:"user"`
 	Password              string `mapstructure:"password"`
 	KeepAlive             uint16 `mapstructure:"keep_alive"`

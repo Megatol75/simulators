@@ -23,9 +23,6 @@ var (
 	Alias      uint64 = 1
 	StartTime  time.Time
 	AppVersion string = "v1.0.0"
-	Maintainer string = "Amine Amaach"
-	Website    string = "amineamaach.me"
-	SourceCode string = "https://github.com/amineamaach/simulators"
 )
 
 // EdgeNodeSvc struct describes the EoN Node properties
@@ -77,7 +74,7 @@ func NewEdgeNodeInstance(
 		return nil, err
 	}
 
-	err = mqttSession.EstablishMqttSession(ctx, willTopic, bytes,
+	err = mqttSession.EstablishMqttSession(ctx, nodeId, willTopic, bytes,
 		func(cm *autopaho.ConnectionManager, c *paho.Connack) {
 			log.WithFields(logrus.Fields{
 				"Groupe Id": eonNode.GroupId,
@@ -122,28 +119,25 @@ func (e *EdgeNodeSvc) PublishBirth(ctx context.Context, log *logrus.Logger) *Edg
 	upTime := int64(time.Since(StartTime) / 1e+6)
 	Seq = 0
 	Alias = 1
-	alias20 := GetNextAliasRange(20)
+	alias17 := GetNextAliasRange(17)
 	// Create the EoN Node BIRTH payload
 	payload := model.NewSparkplubBPayload(time.Now(), GetNextSeqNum(log)).
-		AddMetric(*model.NewMetric("bdSeq", sparkplug.DataType_UInt64, alias20, BdSeq)).
-		AddMetric(*model.NewMetric("Node Id", sparkplug.DataType_String, alias20+1, e.NodeId)).
-		AddMetric(*model.NewMetric("Group Id", sparkplug.DataType_String, alias20+2, e.GroupId)).
-		AddMetric(*model.NewMetric("Maintainer", sparkplug.DataType_String, alias20+3, Maintainer)).
-		AddMetric(*model.NewMetric("Website", sparkplug.DataType_String, alias20+4, Website)).
-		AddMetric(*model.NewMetric("App version", sparkplug.DataType_String, alias20+5, AppVersion)).
-		AddMetric(*model.NewMetric("Source code", sparkplug.DataType_String, alias20+6, SourceCode)).
-		AddMetric(*model.NewMetric("Up Time ms", sparkplug.DataType_Int64, alias20+7, upTime)).
-		AddMetric(*model.NewMetric("Node Control/Rebirth", sparkplug.DataType_Boolean, alias20+8, false)).
-		AddMetric(*model.NewMetric("Node Control/Reboot", sparkplug.DataType_Boolean, alias20+9, false)).
-		AddMetric(*model.NewMetric("Node Control/Shutdown", sparkplug.DataType_Boolean, alias20+10, false)).
-		AddMetric(*model.NewMetric("Node Control/RemoveDevice", sparkplug.DataType_Boolean, alias20+11, false)).
-		AddMetric(*model.NewMetric("Node Control/AddDevice", sparkplug.DataType_Boolean, alias20+12, false)).
-		AddMetric(*model.NewMetric("Properties/OS", sparkplug.DataType_String, alias20+13, props.OS)).
-		AddMetric(*model.NewMetric("Properties/Kernel", sparkplug.DataType_String, alias20+14, props.Kernel)).
-		AddMetric(*model.NewMetric("Properties/Core", sparkplug.DataType_String, alias20+15, props.Core)).
-		AddMetric(*model.NewMetric("Properties/CPUs", sparkplug.DataType_Int32, alias20+16, int32(props.CPUs))).
-		AddMetric(*model.NewMetric("Properties/Platform", sparkplug.DataType_String, alias20+17, props.Platform)).
-		AddMetric(*model.NewMetric("Properties/Hostname", sparkplug.DataType_String, alias20+18, props.Hostname))
+		AddMetric(*model.NewMetric("bdSeq", sparkplug.DataType_UInt64, alias17, BdSeq)).
+		AddMetric(*model.NewMetric("Node Id", sparkplug.DataType_String, alias17+1, e.NodeId)).
+		AddMetric(*model.NewMetric("Group Id", sparkplug.DataType_String, alias17+2, e.GroupId)).
+		AddMetric(*model.NewMetric("App version", sparkplug.DataType_String, alias17+3, AppVersion)).
+		AddMetric(*model.NewMetric("Up Time ms", sparkplug.DataType_Int64, alias17+4, upTime)).
+		AddMetric(*model.NewMetric("Node Control/Rebirth", sparkplug.DataType_Boolean, alias17+5, false)).
+		AddMetric(*model.NewMetric("Node Control/Reboot", sparkplug.DataType_Boolean, alias17+6, false)).
+		AddMetric(*model.NewMetric("Node Control/Shutdown", sparkplug.DataType_Boolean, alias17+7, false)).
+		AddMetric(*model.NewMetric("Node Control/RemoveDevice", sparkplug.DataType_Boolean, alias17+8, false)).
+		AddMetric(*model.NewMetric("Node Control/AddDevice", sparkplug.DataType_Boolean, alias17+9, false)).
+		AddMetric(*model.NewMetric("Properties/OS", sparkplug.DataType_String, alias17+10, props.OS)).
+		AddMetric(*model.NewMetric("Properties/Kernel", sparkplug.DataType_String, alias17+11, props.Kernel)).
+		AddMetric(*model.NewMetric("Properties/Core", sparkplug.DataType_String, alias17+12, props.Core)).
+		AddMetric(*model.NewMetric("Properties/CPUs", sparkplug.DataType_Int32, alias17+13, int32(props.CPUs))).
+		AddMetric(*model.NewMetric("Properties/Platform", sparkplug.DataType_String, alias17+14, props.Platform)).
+		AddMetric(*model.NewMetric("Properties/Hostname", sparkplug.DataType_String, alias17+15, props.Hostname))
 
 	numberOfDevices := len(e.Devices)
 	aliasDev := GetNextAliasRange(uint64(numberOfDevices))
@@ -483,7 +477,7 @@ func GetNextSeqNum(log *logrus.Logger) uint64 {
 	} else {
 		Seq++
 	}
-	log.WithField("Seq", retSeq).Debugf("Next Seq : %d 🔔\n", Seq)
+	log.WithField("Seq", retSeq).Infof("Next Seq : %d 🔔\n", Seq)
 	return retSeq
 }
 

@@ -2,7 +2,6 @@
     "mqtt_config": {
         "url": "tcp://localhost:1883",
         "qos": 0,
-        "client_id": "",
         "user": "",
         "password": "",
         "keep_alive": 60,
@@ -15,7 +14,8 @@
     "eon_node": {
         "namespace": "spBv1.0",
         "group_id": "sim",
-        "node_id": "13",
+        "node_id": "987",
+        "copy": 2,
         "devices": [
             {
                 "device_id": "emulatedDevice",

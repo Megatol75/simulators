@@ -10,7 +10,6 @@ import (
 	"github.com/eclipse/paho.golang/autopaho"
 	"github.com/eclipse/paho.golang/packets"
 	"github.com/eclipse/paho.golang/paho"
-	nanoid "github.com/matoous/go-nanoid/v2"
 	"github.com/sirupsen/logrus"
 )
 
@@ -25,6 +24,7 @@ func NewMqttSessionSvc() *MqttSessionSvc {
 }
 
 func (m *MqttSessionSvc) EstablishMqttSession(ctx context.Context,
+	eonId string,
 	willTopic string,
 	payload []byte,
 	onConnectionUp func(cm *autopaho.ConnectionManager, c *paho.Connack),
@@ -47,18 +47,6 @@ func (m *MqttSessionSvc) EstablishMqttSession(ctx context.Context,
 	if err != nil {
 		m.Log.Errorf("Unable to parse server URL [%s] : %w ⛔", srvURL, err)
 		return err
-	}
-
-	var cliId string
-	if m.MqttConfigs.ClientID != "" {
-		cliId = m.MqttConfigs.ClientID
-	} else {
-		cliId, err = nanoid.New()
-		if err != nil {
-			m.Log.Errorln("Unable to auto-generate client id ⛔")
-			return err
-		}
-		cliId = "IoTSensorsMQTT-SpB::" + cliId
 	}
 
 	var conn net.Conn
@@ -90,7 +78,7 @@ func (m *MqttSessionSvc) EstablishMqttSession(ctx context.Context,
 	}
 	cliCfg.SetConnectPacketConfigurator(func(c *paho.Connect) *paho.Connect {
 		return &paho.Connect{
-			ClientID:   cliId,
+			ClientID:   eonId,
 			KeepAlive:  m.MqttConfigs.KeepAlive,
 			CleanStart: m.MqttConfigs.CleanStart,
 			Properties: &paho.ConnectProperties{

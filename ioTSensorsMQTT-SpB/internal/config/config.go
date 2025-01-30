@@ -55,7 +55,6 @@ func setDefault(v *viper.Viper, log *logrus.Logger) Cfg {
 		"mqtt_config": {
 			"url": "tcp://broker.emqx.io:1883",
 			"qos": 0,
-			"client_id": "",
 			"user": "",
 			"password": "",
 			"keep_alive": 5,
@@ -69,6 +68,7 @@ func setDefault(v *viper.Viper, log *logrus.Logger) Cfg {
 			"namespace": "spBv1.0",
 			"group_id": "sim",
 			"node_id": "987",
+			"copy": 2,
 			"devices": [
 				{
 					"device_id": "emulatedDevice",

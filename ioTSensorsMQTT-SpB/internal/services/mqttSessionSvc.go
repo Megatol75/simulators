@@ -2,13 +2,11 @@ package services
 
 import (
 	"context"
-	"net"
 	"net/url"
 	"time"
 
 	"github.com/Megatol75/simulators/iotSensorsMQTT-SpB/internal/component"
 	"github.com/eclipse/paho.golang/autopaho"
-	"github.com/eclipse/paho.golang/packets"
 	"github.com/eclipse/paho.golang/paho"
 	"github.com/sirupsen/logrus"
 )
@@ -49,7 +47,6 @@ func (m *MqttSessionSvc) EstablishMqttSession(ctx context.Context,
 		return err
 	}
 
-	var conn net.Conn
 	cliCfg := autopaho.ClientConfig{
 		BrokerUrls:        []*url.URL{srvURL},
 		KeepAlive:         m.MqttConfigs.KeepAlive,
@@ -62,7 +59,8 @@ func (m *MqttSessionSvc) EstablishMqttSession(ctx context.Context,
 		Debug: m.Log,
 		// TODO : TlsConfig
 		ClientConfig: paho.ClientConfig{
-			Router: messageHandler,
+			ClientID: eonId,
+			Router:   messageHandler,
 			OnClientError: func(err error) {
 				m.Log.Errorf("Server requested disconnect: %s ⛔\n", err)
 			},
@@ -73,19 +71,9 @@ func (m *MqttSessionSvc) EstablishMqttSession(ctx context.Context,
 					m.Log.Errorf("Server requested disconnect; reason code : %d ⛔\n", d.ReasonCode)
 				}
 			},
-			Conn: packets.NewThreadSafeConn(conn),
 		},
 	}
-	cliCfg.SetConnectPacketConfigurator(func(c *paho.Connect) *paho.Connect {
-		return &paho.Connect{
-			ClientID:   eonId,
-			KeepAlive:  m.MqttConfigs.KeepAlive,
-			CleanStart: m.MqttConfigs.CleanStart,
-			Properties: &paho.ConnectProperties{
-				SessionExpiryInterval: &m.MqttConfigs.SessionExpiryInterval,
-			},
-		}
-	})
+
 	if m.MqttConfigs.User != "" {
 		cliCfg.SetUsernamePassword(m.MqttConfigs.User, []byte(m.MqttConfigs.Password))
 	}
@@ -94,7 +82,7 @@ func (m *MqttSessionSvc) EstablishMqttSession(ctx context.Context,
 	cliCfg.SetWillMessage(willTopic, payload, 0, false)
 
 	// Connect to the broker - this will return immediately after initiating the connection process
-	m.Log.Infof("Trying to establish an MQTT Session to %v 🔔\n", cliCfg.BrokerUrls)
+	m.Log.Infof("Trying to establish an MQTT Session to %v for ClientId %s🔔\n", cliCfg.BrokerUrls, eonId)
 	cm, err := autopaho.NewConnection(ctx, cliCfg)
 	if err != nil {
 		panic(err)

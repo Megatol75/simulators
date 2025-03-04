@@ -18,7 +18,6 @@ import (
 
 var (
 	// EoD Node Seq and BdSeq
-	Seq        uint64 = 0
 	BdSeq      uint64 = 0
 	Alias      uint64 = 1
 	StartTime  time.Time
@@ -33,6 +32,7 @@ type EdgeNodeSvc struct {
 	Devices        map[string]*DeviceSvc
 	SessionHandler *MqttSessionSvc
 	connMut        sync.Mutex
+	Seq            uint64
 }
 
 // NewEdgeNodeInstance used to instantiate a new instance of the EoN Node.
@@ -61,7 +61,7 @@ func NewEdgeNodeInstance(
 	willTopic := namespace + "/" + groupId + "/NDEATH/" + nodeId
 
 	// Building up the Death Certificate MQTT Payload.
-	payload := model.NewSparkplubBPayload(time.Now(), GetNextSeqNum(log)).
+	payload := model.NewSparkplubBPayload(time.Now(), 0).
 		AddMetric(*model.NewMetric("bdSeq", sparkplug.DataType_UInt64, 1, bdSeq))
 
 	// Encoding the Death Certificate MQTT Payload.
@@ -85,8 +85,8 @@ func NewEdgeNodeInstance(
 			topic := namespace + "/" + groupId + "/NCMD/" + nodeId
 
 			if _, err := cm.Subscribe(ctx, &paho.Subscribe{
-				Subscriptions: map[string]paho.SubscribeOptions{
-					topic: {QoS: mqttConfigs.QoS},
+				Subscriptions: []paho.SubscribeOptions{
+					{Topic: topic, QoS: mqttConfigs.QoS},
 				},
 			}); err != nil {
 				log.Infof("Failed to subscribe (%s). This is likely to mean no messages will be received. ⛔\n", err)
@@ -117,11 +117,11 @@ func (e *EdgeNodeSvc) PublishBirth(ctx context.Context, log *logrus.Logger) *Edg
 	// of an MQTT Session is an EoN BIRTH Certificate.
 	props, _ := goInfo.GetInfo()
 	upTime := int64(time.Since(StartTime) / 1e+6)
-	Seq = 0
+	e.Seq = 0
 	Alias = 1
 	alias17 := GetNextAliasRange(17)
 	// Create the EoN Node BIRTH payload
-	payload := model.NewSparkplubBPayload(time.Now(), GetNextSeqNum(log)).
+	payload := model.NewSparkplubBPayload(time.Now(), e.GetNextSeqNum(log)).
 		AddMetric(*model.NewMetric("bdSeq", sparkplug.DataType_UInt64, alias17, BdSeq)).
 		AddMetric(*model.NewMetric("Node Id", sparkplug.DataType_String, alias17+1, e.NodeId)).
 		AddMetric(*model.NewMetric("Group Id", sparkplug.DataType_String, alias17+2, e.GroupId)).
@@ -352,7 +352,7 @@ func (e *EdgeNodeSvc) AddDevice(device *DeviceSvc, log *logrus.Logger) *EdgeNode
 
 func (e *EdgeNodeSvc) PublishDeviceData(ctx context.Context, deviceId string, data []SensorReading, log *logrus.Logger) {
 	e.connMut.Lock()
-	seq := GetNextSeqNum(log)
+	seq := e.GetNextSeqNum(log)
 	topic := e.Namespace + "/" + e.GroupId + "/DDATA/" + e.NodeId + "/" + deviceId
 	payload := model.NewSparkplubBPayload(time.Now(), seq)
 
@@ -416,7 +416,7 @@ func (e *EdgeNodeSvc) ShutdownDevice(ctx context.Context, deviceId string, log *
 	}
 
 	// Building up the Death Certificate MQTT Payload.
-	seq := GetNextSeqNum(log)
+	seq := e.GetNextSeqNum(log)
 	payload := model.NewSparkplubBPayload(time.Now(), seq)
 
 	// The Edge of Network (EoN) Node is responsible for publishing DDEATH of its devices.
@@ -457,6 +457,18 @@ func (e *EdgeNodeSvc) ShutdownDevice(ctx context.Context, deviceId string, log *
 	return e
 }
 
+// GetNextSeqNum used to get the sequence number
+func (e *EdgeNodeSvc) GetNextSeqNum(log *logrus.Logger) uint64 {
+	retSeq := e.Seq
+	if e.Seq == 255 {
+		e.Seq = 0
+	} else {
+		e.Seq++
+	}
+	log.WithField("Seq", retSeq).Debugf("Next Seq : %d 🔔\n", e.Seq)
+	return retSeq
+}
+
 func IsDeviceMessage(topic string) (isDcmd bool, deviceId string) {
 	topicParts := strings.Split(topic, "/")
 	if topicParts[2] == "DCMD" {
@@ -467,18 +479,6 @@ func IsDeviceMessage(topic string) (isDcmd bool, deviceId string) {
 	}
 
 	return isDcmd, deviceId
-}
-
-// GetNextSeqNum used to get the sequence number
-func GetNextSeqNum(log *logrus.Logger) uint64 {
-	retSeq := Seq
-	if Seq == 255 {
-		Seq = 0
-	} else {
-		Seq++
-	}
-	log.WithField("Seq", retSeq).Infof("Next Seq : %d 🔔\n", Seq)
-	return retSeq
 }
 
 func GetNextAliasRange(size uint64) uint64 {

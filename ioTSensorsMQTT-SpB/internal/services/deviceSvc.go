@@ -142,7 +142,7 @@ func (d *DeviceSvc) PublishBirth(ctx context.Context, log *logrus.Logger) {
 
 	// Prevent race condition on the seq number when building/publishing
 	d.connMut.RLock()
-	seq := GetNextSeqNum(log)
+	seq := d.EoN.GetNextSeqNum(log)
 	alias10 := GetNextAliasRange(10)
 	d.connMut.RUnlock()
 
@@ -501,10 +501,6 @@ func (d *DeviceSvc) AddSimulator(sim *simulators.IoTSensorSim, log *logrus.Logge
 		*sim.IsAssigned = true
 		sim.IsRunning = false
 
-		log.WithFields(logrus.Fields{
-			"Sensor Id": sim.SensorId,
-			"Device Id": d.DeviceId,
-		}).Infoln("Sensor added successfully ✅")
 		return d
 	} else {
 		log.Errorln("Sensor id not defined ⛔")

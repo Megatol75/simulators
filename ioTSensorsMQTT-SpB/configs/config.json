@@ -2,8 +2,8 @@
     "mqtt_config": {
         "url": "tcp://localhost:1883",
         "qos": 0,
-        "user": "",
-        "password": "",
+        "user": "mqttuser",
+        "password": "mqttpassword",
         "keep_alive": 60,
         "connect_timeout": "30s",
         "connect_retry": 3,
@@ -14,11 +14,11 @@
     "eon_node": {
         "namespace": "spBv1.0",
         "group_id": "sim",
-        "node_id": "987",
-        "copy": 2,
+        "node_id": "988",
+        "copy": 250,
         "devices": [
             {
-                "device_id": "emulatedDevice",
+                "device_id": "Dev1",
                 "delay_min": 50,
                 "delay_max": 70,
                 "randomize": true,
@@ -27,33 +27,39 @@
                         "sensor_id": "Temperature",
                         "mean": 30.6,
                         "standard_deviation": 3.1,
-                        "copy": 2
+                        "copy": 50
                     },
                     {
                         "sensor_id": "Pressure",
                         "mean": 10.6,
                         "standard_deviation": 3.1,
-                        "copy": 2
+                        "copy": 50
                     },
                     {
                         "sensor_id": "Voltage",
                         "mean": 22.6,
                         "standard_deviation": 3.1,
-                        "copy": 2
+                        "copy": 50
                     }
                 ]
             },
             {
-                "device_id": "anotherEmulatedDevice",
+                "device_id": "Dev2",
                 "delay_min": 40,
                 "delay_max": 100,
-                "randomize": false,
+                "randomize": true,
                 "simulators": [
                     {
                         "sensor_id": "Humidity",
                         "mean": 40.7,
                         "standard_deviation": 2.3,
-                        "copy": 1
+                        "copy": 50
+                    },
+                    {
+                        "sensor_id": "Volume",
+                        "mean": 113.1,
+                        "standard_deviation": 4.3,
+                        "copy": 50
                     }
                 ]
             }
@@ -63,6 +69,6 @@
     "logger": {
         "level": "INFO",
         "format": "TEXT",
-        "disable_timestamp": true
+        "disable_timestamp": false
     }
 }

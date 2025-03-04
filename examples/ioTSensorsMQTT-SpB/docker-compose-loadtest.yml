@@ -1,0 +1,12 @@
+version: "3.9"
+services:
+
+##########################################################
+################## EoN Nodes Sparkplug B #################
+##########################################################
+  eonNode:
+    image: megatol75/sparkplugloadtest:dev
+    restart: "no"
+    container_name: spbLoadTest
+    volumes:
+    - ./configs/config.json:/configs/config.json

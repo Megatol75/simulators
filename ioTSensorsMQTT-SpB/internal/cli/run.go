@@ -76,8 +76,8 @@ func Run() {
 			// Subscribe to device control commands
 			topic := eonNode.Namespace + "/" + eonNode.GroupId + "/DCMD/" + eonNode.NodeId + "/" + device.DeviceId
 			if _, err := eonNode.SessionHandler.MqttClient.Subscribe(eodNodeContext, &paho.Subscribe{
-				Subscriptions: map[string]paho.SubscribeOptions{
-					topic: {QoS: cfg.MQTTConfig.QoS},
+				Subscriptions: []paho.SubscribeOptions{
+					{Topic: topic, QoS: cfg.MQTTConfig.QoS},
 				},
 			}); err != nil {
 				logger.Infof("Failed to subscribe (%s). This is likely to mean no messages will be received. ⛔\n", err)

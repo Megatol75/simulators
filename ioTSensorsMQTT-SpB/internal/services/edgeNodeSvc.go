@@ -140,7 +140,7 @@ func (e *EdgeNodeSvc) PublishBirth(ctx context.Context, log *logrus.Logger) *Edg
 		AddMetric(*model.NewMetric("Properties/Hostname", sparkplug.DataType_String, alias17+15, props.Hostname))
 
 	numberOfDevices := len(e.Devices)
-	aliasDev := GetNextAliasRange(uint64(numberOfDevices))
+	aliasDev := GetNextAliasRange(numberOfDevices)
 	var i uint64 = 0
 
 	for name, d := range e.Devices {
@@ -481,9 +481,9 @@ func IsDeviceMessage(topic string) (isDcmd bool, deviceId string) {
 	return isDcmd, deviceId
 }
 
-func GetNextAliasRange(size uint64) uint64 {
+func GetNextAliasRange(size int) uint64 {
 	retAlias := Alias
-	Alias = Alias + size
+	Alias = Alias + uint64(size)
 	return retAlias
 }
 

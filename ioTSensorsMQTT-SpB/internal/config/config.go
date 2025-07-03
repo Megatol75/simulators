@@ -69,6 +69,7 @@ func setDefault(v *viper.Viper, log *logrus.Logger) Cfg {
 			"group_id": "sim",
 			"node_id": "987",
 			"copy": 2,
+			"only_birth": false,
 			"devices": [
 				{
 					"device_id": "emulatedDevice",

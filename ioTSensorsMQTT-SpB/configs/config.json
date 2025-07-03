@@ -16,6 +16,7 @@
         "group_id": "sim",
         "node_id": "988",
         "copy": 250,
+        "only_birth": false,
         "devices": [
             {
                 "device_id": "Dev1",

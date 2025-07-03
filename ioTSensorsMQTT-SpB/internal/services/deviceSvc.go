@@ -36,6 +36,10 @@ type DeviceSvc struct {
 	// Check if it's running
 	IsRunning bool
 
+	// Alias range for the device
+	AliasCommonStart uint64
+	AliasMetricStart uint64
+
 	// Delay between each data point
 	DelayMin uint32
 	DelayMax uint32
@@ -118,6 +122,30 @@ func (d *DeviceSvc) Run(log *logrus.Logger) *DeviceSvc {
 	return d
 }
 
+func (d *DeviceSvc) RunBirth(log *logrus.Logger) *DeviceSvc {
+	if d.DelayMin <= 0 {
+		d.DelayMin = 1
+	} else if d.DelayMin >= d.DelayMax && d.Randomize {
+		d.DelayMax = d.DelayMin
+	}
+
+	go func() {
+		var delay uint32
+
+		for {
+			if d.Randomize {
+				delay = uint32(rand.Intn(int(d.DelayMax-d.DelayMin))) + d.DelayMin
+			} else {
+				delay = d.DelayMin
+			}
+			time.Sleep(time.Duration(delay) * time.Second)
+			d.PublishBirth(context.Background(), log)
+		}
+	}()
+
+	return d
+}
+
 func (d *DeviceSvc) getAllReadings() []SensorReading {
 	readings := make([]SensorReading, len(d.Simulators))
 	i := 0
@@ -143,8 +171,16 @@ func (d *DeviceSvc) PublishBirth(ctx context.Context, log *logrus.Logger) {
 	// Prevent race condition on the seq number when building/publishing
 	d.connMut.RLock()
 	seq := d.EoN.GetNextSeqNum(log)
-	alias10 := GetNextAliasRange(10)
+
+	if d.AliasCommonStart == 0 {
+		d.AliasCommonStart = GetNextAliasRange(10)
+		log.WithFields(logrus.Fields{
+			"Device Id": d.DeviceId,
+			"Node Id":   d.NodeId,
+		}).Infoln("Alias range is not set, initialized from", d.AliasCommonStart)
+	}
 	d.connMut.RUnlock()
+	alias10 := d.AliasCommonStart
 
 	// Create the DBIRTH certificate payload
 
@@ -167,14 +203,19 @@ func (d *DeviceSvc) PublishBirth(ctx context.Context, log *logrus.Logger) {
 		AddMetric(*model.NewMetric("Properties/Number of simulators", sparkplug.DataType_Int64, alias10+8, int64(len(d.Simulators)))).
 		AddMetric(*model.NewMetric("Properties/Up time ms", sparkplug.DataType_Int64, alias10+9, upTime))
 
-	for _, sim := range d.Simulators {
+	if d.AliasMetricStart == 0 {
+		numSensors := len(d.Simulators)
 		d.connMut.RLock()
-		alias1 := GetNextAliasRange(1)
+		d.AliasMetricStart = GetNextAliasRange(numSensors)
 		d.connMut.RUnlock()
+	}
+	aliasSensor := d.AliasMetricStart
 
+	for _, sim := range d.Simulators {
 		if sim != nil {
-			sim.Alias = alias1
+			sim.Alias = aliasSensor
 			payload.AddMetric(*model.NewMetric(sim.SensorId, sparkplug.DataType_Double, sim.Alias, nil))
+			aliasSensor++
 		}
 	}
 

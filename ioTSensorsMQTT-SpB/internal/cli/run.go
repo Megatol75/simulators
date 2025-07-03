@@ -110,10 +110,16 @@ func Run() {
 
 	}
 
+	onlyBirth := cfg.EoNNodeConfig.OnlyBirth
+
 	for _, eonNode := range eonNodes {
 		//Start publishing
 		for _, d := range eonNode.Devices {
-			d.Run(logger).RunPublisher(eodNodeContext, logger)
+			if onlyBirth {
+				d.RunBirth(logger)
+			} else {
+				d.Run(logger).RunPublisher(eodNodeContext, logger)
+			}
 		}
 	}
 

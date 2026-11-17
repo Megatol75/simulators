@@ -20,6 +20,7 @@ func NewLogger(
 		log.Formatter = new(logrus.TextFormatter)
 		log.Formatter.(*logrus.TextFormatter).DisableColors = false
 		log.Formatter.(*logrus.TextFormatter).DisableTimestamp = disableTimestamp
+		log.Formatter.(*logrus.TextFormatter).FullTimestamp = true
 	}
 
 	switch level {

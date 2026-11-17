@@ -5,9 +5,9 @@ go 1.24.0
 require (
 	github.com/eclipse/paho.golang v0.23.0
 	github.com/matishsiao/goInfo v0.0.0-20241216093258-66a9250504d6
-	github.com/sirupsen/logrus v1.9.0
+	github.com/sirupsen/logrus v1.10.2
 	github.com/spf13/viper v1.13.0
-	google.golang.org/protobuf v1.28.1
+	google.golang.org/protobuf v1.36.12
 )
 
 require (

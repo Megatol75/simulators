@@ -77,12 +77,18 @@ func (m *MqttSessionSvc) EstablishMqttSession(ctx context.Context,
 	}
 
 	if m.MqttConfigs.User != "" {
-		cliCfg.SetUsernamePassword(m.MqttConfigs.User, []byte(m.MqttConfigs.Password))
+		cliCfg.ConnectUsername = m.MqttConfigs.User;
+		cliCfg.ConnectPassword = []byte(m.MqttConfigs.Password);
 	}
 
 	// Setup the Death Certificate Topic/Payload into the MQTT session
-	cliCfg.SetWillMessage(willTopic, payload, 0, false)
-
+	cliCfg.WillMessage = &paho.WillMessage{
+		Topic: willTopic,
+		Payload: payload,
+		Retain: false,
+		QoS: 1,
+	}
+	
 	// Connect to the broker - this will return immediately after initiating the connection process
 	m.Log.Infof("Trying to establish an MQTT Session to %v for ClientId %s🔔\n", cliCfg.BrokerUrls, eonId)
 	cm, err := autopaho.NewConnection(ctx, cliCfg)

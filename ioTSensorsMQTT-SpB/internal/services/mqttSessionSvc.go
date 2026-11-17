@@ -26,6 +26,7 @@ func (m *MqttSessionSvc) EstablishMqttSession(ctx context.Context,
 	willTopic string,
 	payload []byte,
 	onConnectionUp func(cm *autopaho.ConnectionManager, c *paho.Connack),
+	onConnectionDown func() bool,
 	messageHandler func(paho.PublishReceived) (bool, error),
 ) error {
 	if m.MqttClient != nil {
@@ -48,11 +49,12 @@ func (m *MqttSessionSvc) EstablishMqttSession(ctx context.Context,
 	}
 
 	cliCfg := autopaho.ClientConfig{
-		BrokerUrls:        []*url.URL{srvURL},
+		ServerUrls:        []*url.URL{srvURL},
 		KeepAlive:         m.MqttConfigs.KeepAlive,
 		ConnectRetryDelay: time.Duration(m.MqttConfigs.ConnectRetry) * time.Second,
 		ConnectTimeout:    connectTimeout,
 		OnConnectionUp:    onConnectionUp,
+		OnConnectionDown:  onConnectionDown,
 		OnConnectError: func(err error) {
 			m.Log.Errorf("Error whilst attempting connection %s ⛔\n", err)
 		},

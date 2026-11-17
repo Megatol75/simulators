@@ -40,7 +40,6 @@ func Run() {
 			cfg.EoNNodeConfig.Namespace,
 			cfg.EoNNodeConfig.GroupId,
 			fmt.Sprintf("%v%05d", cfg.EoNNodeConfig.NodeId, i),
-			services.BdSeq,
 			logger,
 			&cfg.MQTTConfig,
 		)

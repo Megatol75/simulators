@@ -250,9 +250,6 @@ func (d *DeviceSvc) PublishBirth(ctx context.Context, log *logrus.Logger) {
 			"Node Id":   d.NodeId,
 			"Device Id": d.DeviceId,
 		}).Infoln("DBIRTH certificate published successfully ✅")
-
-		// Increment the bdSeq number for the next use
-		IncrementBdSeqNum(log)
 	}
 
 }

@@ -17,8 +17,6 @@ import (
 )
 
 var (
-	// EoD Node Seq and BdSeq
-	BdSeq      uint64 = 0
 	Alias      uint64 = 1
 	StartTime  time.Time
 	AppVersion string = "v1.0.0"
@@ -33,13 +31,13 @@ type EdgeNodeSvc struct {
 	SessionHandler *MqttSessionSvc
 	connMut        sync.Mutex
 	Seq            uint64
+	BdSeq          uint64
 }
 
 // NewEdgeNodeInstance used to instantiate a new instance of the EoN Node.
 func NewEdgeNodeInstance(
 	ctx context.Context,
 	namespace, groupId, nodeId string,
-	bdSeq uint64,
 	log *logrus.Logger,
 	mqttConfigs *component.MQTTConfig,
 ) (*EdgeNodeSvc, error) {
@@ -62,7 +60,7 @@ func NewEdgeNodeInstance(
 
 	// Building up the Death Certificate MQTT Payload.
 	payload := model.NewSparkplubBPayload(time.Now(), 0).
-		AddMetric(*model.NewMetric("bdSeq", sparkplug.DataType_UInt64, 1, bdSeq))
+		AddMetric(*model.NewMetric("bdSeq", sparkplug.DataType_UInt64, 1, eonNode.BdSeq))
 
 	// Encoding the Death Certificate MQTT Payload.
 	bytes, err := NewSparkplugBEncoder(log).GetBytes(payload)
@@ -94,6 +92,15 @@ func NewEdgeNodeInstance(
 			}
 			log.WithField("Topic", topic).Infoln("MQTT subscription made ✅")
 		},
+		func() bool {
+			log.WithFields(logrus.Fields{
+				"Groupe Id": eonNode.GroupId,
+				"Node Id":   eonNode.NodeId,
+			}).Infoln("MQTT connection is down ⛔")
+			//increment BdSeq for the next connect
+			eonNode.IncrementBdSeqNum(log);
+			return true;
+		},
 		func(received paho.PublishReceived) (bool, error) {
 			eonNode.OnMessageArrived(ctx, received.Packet, log)
 			return true, nil
@@ -123,7 +130,7 @@ func (e *EdgeNodeSvc) PublishBirth(ctx context.Context, log *logrus.Logger) *Edg
 	alias17 := GetNextAliasRange(17)
 	// Create the EoN Node BIRTH payload
 	payload := model.NewSparkplubBPayload(time.Now(), e.GetNextSeqNum(log)).
-		AddMetric(*model.NewMetric("bdSeq", sparkplug.DataType_UInt64, alias17, BdSeq)).
+		AddMetric(*model.NewMetric("bdSeq", sparkplug.DataType_UInt64, alias17, e.BdSeq)).
 		AddMetric(*model.NewMetric("Node Id", sparkplug.DataType_String, alias17+1, e.NodeId)).
 		AddMetric(*model.NewMetric("Group Id", sparkplug.DataType_String, alias17+2, e.GroupId)).
 		AddMetric(*model.NewMetric("App version", sparkplug.DataType_String, alias17+3, AppVersion)).
@@ -178,9 +185,6 @@ func (e *EdgeNodeSvc) PublishBirth(ctx context.Context, log *logrus.Logger) *Edg
 			"Groupe Id": e.GroupId,
 			"Node Id":   e.NodeId,
 		}).Infoln("NBIRTH certificate published successfully ✅")
-
-		// Increment the bdSeq number for the next use
-		IncrementBdSeqNum(log)
 	}
 
 	return e
@@ -470,6 +474,16 @@ func (e *EdgeNodeSvc) GetNextSeqNum(log *logrus.Logger) uint64 {
 	return retSeq
 }
 
+// IncrementBdSeqNum used to increment the Bd sequence number
+func (e *EdgeNodeSvc) IncrementBdSeqNum(log *logrus.Logger) {
+	if e.BdSeq == 255 {
+		e.BdSeq = 0
+	} else {
+		e.BdSeq++
+	}
+	log.WithField("Next BdSeq", e.BdSeq).Debugln("BdSeq incremented 🔔")
+}
+
 func IsDeviceMessage(topic string) (isDcmd bool, deviceId string) {
 	topicParts := strings.Split(topic, "/")
 	if topicParts[2] == "DCMD" {
@@ -488,12 +502,3 @@ func GetNextAliasRange(size int) uint64 {
 	return retAlias
 }
 
-// IncrementBdSeqNum used to increment the Bd sequence number
-func IncrementBdSeqNum(log *logrus.Logger) {
-	if BdSeq == 256 {
-		BdSeq = 0
-	} else {
-		BdSeq++
-	}
-	log.WithField("Next BdSeq", BdSeq).Debugln("BdSeq incremented 🔔")
-}

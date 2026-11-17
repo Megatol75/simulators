@@ -94,9 +94,10 @@ func NewEdgeNodeInstance(
 			}
 			log.WithField("Topic", topic).Infoln("MQTT subscription made ✅")
 		},
-		paho.NewSingleHandlerRouter(func(p *paho.Publish) {
-			eonNode.OnMessageArrived(ctx, p, log)
-		}),
+		func(received paho.PublishReceived) (bool, error) {
+			eonNode.OnMessageArrived(ctx, received.Packet, log)
+			return true, nil
+		},
 	)
 
 	if err != nil {

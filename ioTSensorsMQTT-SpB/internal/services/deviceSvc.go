@@ -108,14 +108,13 @@ func (d *DeviceSvc) Run(log *logrus.Logger) *DeviceSvc {
 		d.SensorReadings <- readings
 
 		for {
-			select {
-			case <-time.After(time.Duration(delay) * time.Second):
-				if d.Randomize {
-					delay = uint32(rand.Intn(int(d.DelayMax-d.DelayMin))) + d.DelayMin
-				}
-				readings := d.getAllReadings()
-				d.SensorReadings <- readings
+			time.Sleep(time.Duration(delay) * time.Second)
+
+			if d.Randomize {
+				delay = uint32(rand.Intn(int(d.DelayMax-d.DelayMin))) + d.DelayMin
 			}
+			readings := d.getAllReadings()
+			d.SensorReadings <- readings
 		}
 	}()
 
@@ -304,9 +303,6 @@ func (d *DeviceSvc) OnMessageArrived(ctx context.Context, msg *paho.Publish, log
 					name      string
 					mean      float64
 					std       float64
-					delayMin  uint32
-					delayMax  uint32
-					randomize bool
 				}
 				newSensor := sensorParams{}
 				for _, param := range payloadTemplate.Parameters {
@@ -342,42 +338,6 @@ func (d *DeviceSvc) OnMessageArrived(ctx context.Context, msg *paho.Publish, log
 								"Topic": msg.Topic,
 								"Name":  *param.Name,
 							}).Errorln("Failed to parse sensor Std value ⛔")
-							return
-						}
-					}
-
-					if *param.Name == "DelayMin" {
-						if name, ok := param.Value.(*sparkplug.Payload_Template_Parameter_IntValue); ok {
-							newSensor.delayMin = name.IntValue
-						} else {
-							log.WithFields(logrus.Fields{
-								"Topic": msg.Topic,
-								"Name":  *param.Name,
-							}).Errorln("Failed to parse sensor min delay value ⛔")
-							return
-						}
-					}
-
-					if *param.Name == "DelayMax" {
-						if name, ok := param.Value.(*sparkplug.Payload_Template_Parameter_IntValue); ok {
-							newSensor.delayMax = name.IntValue
-						} else {
-							log.WithFields(logrus.Fields{
-								"Topic": msg.Topic,
-								"Name":  *param.Name,
-							}).Errorln("Failed to parse sensor max delay value ⛔")
-							return
-						}
-					}
-
-					if *param.Name == "Randomize" {
-						if name, ok := param.Value.(*sparkplug.Payload_Template_Parameter_BooleanValue); ok {
-							newSensor.randomize = name.BooleanValue
-						} else {
-							log.WithFields(logrus.Fields{
-								"Topic": msg.Topic,
-								"Name":  *param.Name,
-							}).Errorln("Failed to parse sensor randomize value ⛔")
 							return
 						}
 					}

@@ -38,13 +38,13 @@ func (m *MqttSessionSvc) EstablishMqttSession(ctx context.Context,
 
 	connectTimeout, err := time.ParseDuration(m.MqttConfigs.ConnectTimeout)
 	if err != nil {
-		m.Log.Errorf("Unable to parse connect timeout duration string: %w ⛔", err)
+		m.Log.Errorf("Unable to parse connect timeout duration string: %v ⛔", err)
 		return err
 	}
 
 	srvURL, err := url.Parse(m.MqttConfigs.URL)
 	if err != nil {
-		m.Log.Errorf("Unable to parse server URL [%s] : %w ⛔", srvURL, err)
+		m.Log.Errorf("Unable to parse server URL [%s] : %v ⛔", srvURL, err)
 		return err
 	}
 

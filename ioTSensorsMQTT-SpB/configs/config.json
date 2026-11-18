@@ -15,8 +15,8 @@
     "namespace": "spBv1.0",
     "group_id": "sim",
     "node_id": "988",
-    "copy": 2,
-    "only_birth": true,
+    "copy": 1,
+    "only_birth": false,
     "devices": [
       {
         "device_id": "Dev1",

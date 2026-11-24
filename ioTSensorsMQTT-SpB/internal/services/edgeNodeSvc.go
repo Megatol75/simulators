@@ -31,7 +31,7 @@ type EdgeNodeSvc struct {
 	SessionHandler *MqttSessionSvc
 	connMut        sync.Mutex
 	Seq            uint64
-	BdSeq          uint64
+	BdSeq          int64
 }
 
 // NewEdgeNodeInstance used to instantiate a new instance of the EoN Node.
@@ -58,21 +58,7 @@ func NewEdgeNodeInstance(
 
 	willTopic := namespace + "/" + groupId + "/NDEATH/" + nodeId
 
-	// Building up the Death Certificate MQTT Payload.
-	payload := model.NewSparkplubBPayload(time.Now(), 0).
-		AddMetric(*model.NewMetric("bdSeq", sparkplug.DataType_UInt64, 1, eonNode.BdSeq))
-
-	// Encoding the Death Certificate MQTT Payload.
-	bytes, err := NewSparkplugBEncoder(log).GetBytes(payload)
-	if err != nil {
-		log.WithFields(logrus.Fields{
-			"Groupe ID": eonNode.GroupId,
-			"Node ID":   eonNode.NodeId,
-		}).Errorln("Error encoding the sparkplug payload ⛔")
-		return nil, err
-	}
-
-	err = mqttSession.EstablishMqttSession(ctx, nodeId, willTopic, bytes,
+	err := mqttSession.EstablishMqttSession(ctx, nodeId, willTopic,
 		func(cm *autopaho.ConnectionManager, c *paho.Connack) {
 			log.WithFields(logrus.Fields{
 				"Groupe Id": eonNode.GroupId,
@@ -105,6 +91,7 @@ func NewEdgeNodeInstance(
 			eonNode.OnMessageArrived(ctx, received.Packet, log)
 			return true, nil
 		},
+		eonNode.GetNDeathPayload,
 	)
 
 	if err != nil {
@@ -119,6 +106,27 @@ func NewEdgeNodeInstance(
 	return eonNode, err
 }
 
+func (e *EdgeNodeSvc) GetNDeathPayload(log *logrus.Logger) ([]byte, error){
+	// Building up the NDeath Certificate MQTT Payload.
+	payload := model.NewSparkplubBPayload(time.Now(), 0).
+		AddMetric(*model.NewMetric("bdSeq", sparkplug.DataType_Int64, 1, e.BdSeq))
+
+	// Encoding the NDeath Certificate MQTT Payload.
+	bytes, err := NewSparkplugBEncoder(log).GetBytes(payload)
+	if err != nil {
+		log.WithFields(logrus.Fields{
+			"Groupe ID": e.GroupId,
+			"Node ID":   e.NodeId,
+		}).Errorln("Error encoding the sparkplug payload ⛔")
+		return nil, err
+	}
+
+	log.Infof("Prepared NDEATH with bdSeq: %v", e.BdSeq)
+
+	return bytes, nil
+}
+
+
 // PublishBirth used to publish the EoN node NBIRTH certificate to the broker.
 func (e *EdgeNodeSvc) PublishBirth(ctx context.Context, log *logrus.Logger) *EdgeNodeSvc {
 	// The first MQTT message that an EoN node MUST publish upon the successful establishment
@@ -130,7 +138,7 @@ func (e *EdgeNodeSvc) PublishBirth(ctx context.Context, log *logrus.Logger) *Edg
 	alias17 := GetNextAliasRange(17)
 	// Create the EoN Node BIRTH payload
 	payload := model.NewSparkplubBPayload(time.Now(), e.GetNextSeqNum(log)).
-		AddMetric(*model.NewMetric("bdSeq", sparkplug.DataType_UInt64, alias17, e.BdSeq)).
+		AddMetric(*model.NewMetric("bdSeq", sparkplug.DataType_Int64, alias17, e.BdSeq)).
 		AddMetric(*model.NewMetric("Node Id", sparkplug.DataType_String, alias17+1, e.NodeId)).
 		AddMetric(*model.NewMetric("Group Id", sparkplug.DataType_String, alias17+2, e.GroupId)).
 		AddMetric(*model.NewMetric("App version", sparkplug.DataType_String, alias17+3, AppVersion)).
@@ -184,6 +192,7 @@ func (e *EdgeNodeSvc) PublishBirth(ctx context.Context, log *logrus.Logger) *Edg
 		log.WithFields(logrus.Fields{
 			"Groupe Id": e.GroupId,
 			"Node Id":   e.NodeId,
+			"bdSeq":     e.BdSeq,
 		}).Infoln("NBIRTH certificate published successfully ✅")
 	}
 

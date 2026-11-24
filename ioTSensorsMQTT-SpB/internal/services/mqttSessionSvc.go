@@ -24,10 +24,10 @@ func NewMqttSessionSvc() *MqttSessionSvc {
 func (m *MqttSessionSvc) EstablishMqttSession(ctx context.Context,
 	eonId string,
 	willTopic string,
-	payload []byte,
 	onConnectionUp func(cm *autopaho.ConnectionManager, c *paho.Connack),
 	onConnectionDown func() bool,
 	messageHandler func(paho.PublishReceived) (bool, error),
+	getNDeathPayload func(log *logrus.Logger) ([]byte, error),
 ) error {
 	if m.MqttClient != nil {
 		m.Log.Warnln("MQTT session already exists 🔔")
@@ -58,6 +58,23 @@ func (m *MqttSessionSvc) EstablishMqttSession(ctx context.Context,
 		OnConnectError: func(err error) {
 			m.Log.Errorf("Error whilst attempting connection %s ⛔\n", err)
 		},
+		ConnectPacketBuilder: func(cp *paho.Connect, url *url.URL) (*paho.Connect, error) {
+			nDeathPayload, error := getNDeathPayload(m.Log)
+
+			if (error != nil){
+				return nil, error
+			}
+
+			//setup updated NDEATH after disconnect
+			cp.WillMessage = &paho.WillMessage{
+				Topic: willTopic,
+				Payload: nDeathPayload,
+				Retain: false,
+				QoS: 1,
+			}
+			m.Log.Infof("Connecting to host %v", url.Host)
+			return cp, nil
+		},
 		Debug: m.Log,
 		// TODO : TlsConfig
 		ClientConfig: paho.ClientConfig{
@@ -83,14 +100,6 @@ func (m *MqttSessionSvc) EstablishMqttSession(ctx context.Context,
 		cliCfg.ConnectPassword = []byte(m.MqttConfigs.Password);
 	}
 
-	// Setup the Death Certificate Topic/Payload into the MQTT session
-	cliCfg.WillMessage = &paho.WillMessage{
-		Topic: willTopic,
-		Payload: payload,
-		Retain: false,
-		QoS: 1,
-	}
-	
 	// Connect to the broker - this will return immediately after initiating the connection process
 	m.Log.Infof("Trying to establish an MQTT Session to %v for ClientId %s🔔\n", cliCfg.BrokerUrls, eonId)
 	cm, err := autopaho.NewConnection(ctx, cliCfg)
